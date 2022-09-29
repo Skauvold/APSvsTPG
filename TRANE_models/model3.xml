@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<trane>
+  <project-settings>
+    <method>                       simulation                       </method>
+    <seed>                         1                                </seed>
+    <n-threads>                    4                                </n-threads>
+    <logging-level-screen>         2                                </logging-level-screen>
+  </project-settings>
+  <grid-description>
+    <grid-resolution>
+      <nx>                         151                              </nx>
+      <ny>                         101                              </ny>
+      <nz>                         2                                </nz>
+    </grid-resolution>
+    <volume>
+      <x-length>                   6000.0                           </x-length>
+      <y-length>                   4000.0                           </y-length>
+      <z-length>                   20.0                             </z-length>
+      <z-start>                    0.0                              </z-start>
+    </volume>
+  </grid-description>
+  <h-belts>
+    <facies-model>
+      <parent-facies-name>         background                       </parent-facies-name>
+      <facies-names>               F3 F1F2                          </facies-names>
+      <residual-ids>               1                                </residual-ids>
+	    <trend-ids>                  1                                </trend-ids>
+    </facies-model>
+    <facies-model>
+      <parent-facies-name>         F1F2                             </parent-facies-name>
+      <facies-names>               F1 F2                            </facies-names>
+      <residual-ids>               2                                </residual-ids>
+	    <trend-ids>                  2                                </trend-ids>
+    </facies-model>
+    <trend>
+      <trend-id>                   1                                </trend-id>
+      <value>                      0.0                              </value>
+    </trend>
+    <trend>
+      <trend-id>                   2                                </trend-id>
+      <value>                      0.8416                           </value>
+    </trend>
+    <residual-field>
+      <residual-id>                1                                </residual-id>
+      <variogram>
+        <standard-deviation>       1                                </standard-deviation>
+        <variogram-type>           genexp                           </variogram-type>
+        <range>                    800.0                            </range>
+        <subrange>                 500.0                            </subrange>
+        <power>                    1.5                              </power>
+        <z-range>                  20.0                             </z-range>
+        <azimuth>                  30                               </azimuth>
+        <dip>                      0.0                              </dip>
+      </variogram>
+    </residual-field>
+    <residual-field>
+      <residual-id>                2                                </residual-id>
+      <variogram>
+        <standard-deviation>       1                                </standard-deviation>
+        <variogram-type>           genexp                           </variogram-type>
+        <range>                    400.0                            </range>
+        <subrange>                 400.0                            </subrange>
+        <power>                    1.8                              </power>
+        <z-range>                  20.0                             </z-range>
+        <azimuth>                  0                                </azimuth>
+        <dip>                      0.0                              </dip>
+      </variogram>
+    </residual-field>
+  </h-belts>
+  <well-data>
+    <well>
+      <file-name>                  wells/well2.rmswell              </file-name>
+    </well>
+    <well>
+      <file-name>                  wells/well3.rmswell              </file-name>
+    </well>
+  </well-data>
+  <io-settings>
+    <input-directory>              input                            </input-directory>
+    <output-directory>             output3                          </output-directory>
+    <result-file-roff>             result.roff                      </result-file-roff>
+    <facies-probability-file-prefix-roff> probabilities.roff        </facies-probability-file-prefix-roff>
+    <facies-probability-file-prefix-storm> probabilities.storm      </facies-probability-file-prefix-storm>
+    <trend-file-prefix-storm>      trend.storm                      </trend-file-prefix-storm>
+    <residual-field-file-prefix-storm> residual_field.storm         </residual-field-file-prefix-storm>
+    <log-file>                     trane.log                        </log-file>
+  </io-settings>
+</trane>
