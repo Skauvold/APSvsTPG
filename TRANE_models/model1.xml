@@ -82,7 +82,7 @@
   </well-data>
   <io-settings>
     <input-directory>              input                            </input-directory>
-    <output-directory>             output                           </output-directory>
+    <output-directory>             output1                          </output-directory>
     <result-file-roff>             result.roff                      </result-file-roff>
     <facies-probability-file-prefix-roff> probabilities.roff        </facies-probability-file-prefix-roff>
     <facies-probability-file-prefix-storm> probabilities.storm      </facies-probability-file-prefix-storm>
