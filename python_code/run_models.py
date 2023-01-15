@@ -3,40 +3,30 @@
 import copy
 import sys
 import os
-import math
-import matplotlib.pyplot as plt
 import time
 import pickle
 import statistics
-from matplotlib import colors
-from matplotlib.colors import LogNorm
-from matplotlib import cm
-import matplotlib.pyplot as plt
-from datetime import datetime
 from shutil import copyfile
-from scipy.stats import norm
 
-# use: "pip install git+https://code.nr.no/scm/git/variogram"
-from variogram.variogram import ExponentialVariogram
-from variogram.variogram import GeneralExponentialVariogram
-from variogram.variogram import SphericalVariogram
-from variogram.simulate import simulate_gaussian_field
-
-from methods import run_TRANE_simulations
+from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_grids_as_png,
+                     count_connected_grid_nodes, calculate_and_save_facies_prob_maps,
+                     plot_histogram_of_connected_cells, calculate_volume_fractions,
+                     save_threshold_grids_as_png)
 
 
-n_simulations = 10
-# TRANE:
-# ------
-use_existing_results = False
 model_number = "4"
+n_simulations = 3
+use_existing_results = True
 path_trane_models = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\\APSvsTPG\\TRANE_models"
 path_trane_results_to_save = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
+path_trane_exe = "%tra%"
 
+# TRANE:
+# ------
 if not use_existing_results:
     print("Start TRANE-simulations")
-    z_TRANE, z_simbox_TRANE, parameters = run_TRANE_simulations(n_simulations, model_number, path_trane_models, True)
+    z_TRANE, parameters = run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, True)
     print("TRANE-simulations completed")
 
 # Make folder for results. If folder already exists, make a new one folder name to avoid writing over old results
@@ -64,11 +54,9 @@ else:
         z_TRANE = pickle.load(fp)
     with open(os.path.join(path_trane_results_to_load, "parameters"), "rb") as fp:
         parameters = pickle.load(fp)
-exit()
 
-
-# save_facies_grids_as_png(z_TRANE, parameters, 'TRANE', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-# calculate_and_save_facies_prob_maps(z_TRANE, parameters, 'TRANE')
+save_facies_grids_as_png(z_TRANE, parameters, 'TRANE')
+calculate_and_save_facies_prob_maps(z_TRANE, parameters, 'TRANE')
 count_connected_TRANE = count_connected_grid_nodes(z_TRANE, parameters, 3000.0, 2000.0, [3500, 2000])
 dx = parameters[0]
 dy = parameters[1]
@@ -78,20 +66,27 @@ dy = parameters[1]
 # ----
 nx = z_TRANE[0].shape[0]
 ny = z_TRANE[0].shape[1]
-if not use_existing:
-    z_APS = run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number)
-# save_threshold_grids_as_png(parameters)
-if not use_existing:
+if not use_existing_results:
+    print("Start APS-simulations")
+    z_APS = run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, True)
+    print("APS-simulations completed")
+
+save_threshold_grids_as_png(parameters)
+if not use_existing_results:
     with open("z_APS", "wb") as fp:
         pickle.dump(z_APS, fp)
 else:
-    with open("C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\data_model4\\z_APS", "rb") as fp:
+    with open(os.path.join(path_trane_results_to_load, "z_APS"), "rb") as fp:
         z_APS = pickle.load(fp)
-# save_facies_grids_as_png(z_APS, parameters, 'APS', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-# calculate_and_save_facies_prob_maps(z_APS, parameters, 'APS')
 
-# v_TRANE = calculate_volume_fractions(z_TRANE)
-# v_APS = calculate_volume_fractions(z_APS)
+save_facies_grids_as_png(z_APS, parameters, 'APS', [0, 1, 2])
+calculate_and_save_facies_prob_maps(z_APS, parameters, 'APS')
+
+v_TRANE = calculate_volume_fractions(z_TRANE)
+v_APS = calculate_volume_fractions(z_APS)
+
+print(v_TRANE)
+
 # print(statistics.mean(v_TRANE[1]))
 # print(statistics.mean(v_APS[1]))
 # print(statistics.stdev(v_TRANE[1]))
@@ -106,15 +101,10 @@ count_connected_filtered_APS = []
 for count in count_connected_TRANE:
     if count != -1:
         count_connected_filtered_TRANE.append(count)
-# for i in range(0, len(count_connected_TRANE)):
-#     if count_connected_TRANE[i] == -1:
-#         print(i)
 for count in count_connected_APS:
     if count != -1:
         count_connected_filtered_APS.append(count)
-# for i in range(0, len(count_connected_APS)):
-#     if count_connected_APS[i] == -1:
-#         print(i)
+
 print("Statistics connected grid nodes:")
 print(len(count_connected_filtered_TRANE))
 print(len(count_connected_filtered_APS))

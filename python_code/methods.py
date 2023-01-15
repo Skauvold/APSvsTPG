@@ -1,17 +1,30 @@
+from datetime import datetime
+import math
 import os
-import xml.etree.ElementTree
 import subprocess
+import xml.etree.ElementTree
+
+import matplotlib.pyplot as plt
+from matplotlib import colors
+from matplotlib.colors import LogNorm
+from matplotlib import cm
 import numpy as np
+from scipy.stats import norm
+
+# use: "pip install git+https://code.nr.no/scm/git/variogram"
+from variogram.variogram import ExponentialVariogram
+from variogram.variogram import GeneralExponentialVariogram
+from variogram.variogram import SphericalVariogram
+from variogram.simulate import simulate_gaussian_field
 
 
-def run_TRANE_simulations(n_simulations, model, path_trane_models, print_info=False):
+def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False):
     os.chdir(path_trane_models)
-    modelfile_path = os.path.join(path_trane_models, "model" + model + ".xml")
+    modelfile_path = os.path.join(path_trane_models, "model" + model_number + ".xml")
     input_path = os.path.join(path_trane_models, "input")
     et = xml.etree.ElementTree.parse(modelfile_path)
     
     out_z = []
-    out_z_simbox = []
     parameters = []
     for iteration in range(0, n_simulations):
         if print_info:
@@ -20,19 +33,19 @@ def run_TRANE_simulations(n_simulations, model, path_trane_models, print_info=Fa
         seed_tag        = et.findall('.//seed')[0]
         seed_tag.text   = str(seed)
         output_tag      = et.findall('.//output-directory')[0]
-        output_tag.text = "output" + model + "_edited"
+        output_tag.text = "output" + model_number + "_edited"
         nx       = int(et.findall('.//nx')[0].text.strip())
         ny       = int(et.findall('.//ny')[0].text.strip())
         x_length = float(et.findall('.//x-length')[0].text.strip())
         y_length = float(et.findall('.//y-length')[0].text.strip())
         dx = x_length / nx
         dy = y_length / ny
-        et.write('model' + model + '_edited.xml')
-        modelfile_edited_path = os.path.join(path_trane_models, "model" + model + "_edited.xml")
-        output_path           = os.path.join(path_trane_models, "output" + model + "_edited")
+        et.write('model' + model_number + '_edited.xml')
+        modelfile_edited_path = os.path.join(path_trane_models, "model" + model_number + "_edited.xml")
+        output_path           = os.path.join(path_trane_models, "output" + model_number + "_edited")
         results_path          = os.path.join(output_path, "result.roff")
 
-        subprocess.call(["%tra%", modelfile_edited_path], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.call([path_trane_exe, modelfile_edited_path], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
         lines = []
         with open(results_path) as f:
@@ -48,7 +61,6 @@ def run_TRANE_simulations(n_simulations, model, path_trane_models, print_info=Fa
         X, Y = np.meshgrid(x, y)
         X2, Y2 = np.meshgrid(y, x)
         z = X2 ** 2 - Y2 ** 2
-        z_simbox = X ** 2 - Y ** 2
 
         temp = np.zeros((nx,ny,nz))
         counter = 0
@@ -61,24 +73,22 @@ def run_TRANE_simulations(n_simulations, model, path_trane_models, print_info=Fa
             for j in range(0, ny):
                 for k in range(0, nz):
                     if k == 0:
-                        z_simbox[ny - 1 - j][i] = temp[i][j][nz-k-1]
                         z[i][j] = temp[i][j][nz-k-1]
 
         out_z.append(z)
-        out_z_simbox.append(z_simbox)
         if iteration == 0:
             parameters = [dx, dy, x_length, y_length]
-    return out_z, out_z_simbox, parameters
+    return out_z, parameters
 
-def run_APS_simulations(n_simulations, nx, ny, dx, dy, model):
-    if model == "1" or model == "2" or model == "3":
+def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False):
+    if model_number == "1" or model_number == "2" or model_number == "3":
         v1_variogram = "genexp"
         v1_range_x = 800.0
         v1_range_y = 500.0
         v1_range_z = 20.0
         v1_azimuth = 30.0 * 3.141592 / 180.0 # In radians, not degrees
         v1_genexp_power = 1.5
-    elif model == "4":
+    elif model_number == "4":
         v1_variogram = "genexp"
         v1_range_x = 1600.0
         v1_range_y = 1000.0
@@ -86,14 +96,14 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model):
         v1_azimuth = 30.0 * 3.141592 / 180.0 # In radians, not degrees
         v1_genexp_power = 1.5
 
-    if model == "2" or model == "3":
+    if model_number == "2" or model_number == "3":
         v2_variogram = "genexp"
         v2_range_x = 400.0
         v2_range_y = 400.0
         v2_range_z = 20.0
         v2_azimuth = 0.0
         v2_genexp_power = 1.8
-    elif model == "4":
+    elif model_number == "4":
         v2_variogram = "genexp"
         v2_range_x = 800.0
         v2_range_y = 800.0
@@ -110,36 +120,36 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model):
     t2 = np.zeros((nx, ny))
     for i in range(0, nx):
         for j in range(0, ny):
-            if model == "1":
+            if model_number == "1":
                 t1[i][j] = norm.ppf(p_F1[i][j])
                 p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
                 t2[i][j] = norm.ppf(p1_p2)
-            elif model == "2" or model == "3" or model == "4":
+            elif model_number == "2" or model_number == "3" or model_number == "4":
                 t1[i][j] = norm.ppf(p_F3[i][j])
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
-    if model == "2" or model == "3" or model == "4":
+    if model_number == "2" or model_number == "3" or model_number == "4":
         v2 = GeneralExponentialVariogram(v2_range_x, v2_range_y, v2_range_z, azi=v2_azimuth, power=v2_genexp_power)
 
     out_z = []
-    print("Start APS-simulations")
     for iteration in range(0, n_simulations):
-        print("iteration = " + str(iteration))
+        if print_info:
+            print("iteration = " + str(iteration))
         s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed = iteration)
-        if model == "2" or model == "3" or model == "4":
+        if model_number == "2" or model_number == "3" or model_number == "4":
             s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed = iteration)
         z = np.ndarray(s1.shape)
         for i in range(0, nx):
             for j in range(0, ny):
-                if model == "1":
+                if model_number == "1":
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 1
                     elif s1[i][j] < t2[i][j]:
                         z[i][j] = 2
                     else:
                         z[i][j] = 3
-                elif model == "2" or model == "3" or model == "4":
+                elif model_number == "2" or model_number == "3" or model_number == "4":
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 3
                     elif s2[i][j] < t2[i][j]:
@@ -147,7 +157,6 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model):
                     else:
                         z[i][j] = 2
         out_z.append(z)
-    print("APS-simulations completed")
     return out_z
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):
@@ -299,7 +308,6 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
         ax.set_axis_off()
         fig.add_axes(ax)
         img = plt.imshow(p_for_plotting, cmap = 'Blues', alpha = 1.0, interpolation='none', extent = extent, vmin = 0.0, vmax = 1.0)
-        # fig.colorbar(img, ax=ax, shrink=0.8)
         fig.colorbar(img, ax=ax, shrink=0.5)
         now = datetime.now()
         current_time = now.strftime("%H_%M_%S_%f")[:-2]
