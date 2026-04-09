@@ -6,8 +6,6 @@ import xml.etree.ElementTree
 
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from matplotlib.colors import LogNorm
-from matplotlib import cm
 import numpy as np
 from scipy.stats import norm
 
@@ -21,7 +19,7 @@ from variogram.simulate import simulate_gaussian_field
 def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False):
     os.chdir(path_trane_models)
     modelfile_path = os.path.join(path_trane_models, "model" + model_number + ".xml")
-    input_path = os.path.join(path_trane_models, "input")
+    # input_path = os.path.join(path_trane_models, "input")
     et = xml.etree.ElementTree.parse(modelfile_path)
     
     out_z = []

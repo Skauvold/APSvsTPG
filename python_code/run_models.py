@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-import copy
-import sys
 import os
-import time
 import pickle
 import statistics
-from shutil import copyfile
 
 from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_grids_as_png,
                      count_connected_grid_nodes, calculate_and_save_facies_prob_maps,
@@ -14,19 +10,19 @@ from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_gri
                      save_threshold_grids_as_png)
 
 
-model_number = "4"
-n_simulations = 3
-use_existing_results = True
-path_trane_models = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\\APSvsTPG\\TRANE_models"
-path_trane_results_to_save = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
-path_trane_results_to_load = "C:\\Projects\\trane_work\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
+MODEL = "4"
+n_sim = 20
+use_existing_results = False
+path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
+path_trane_results_to_save = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
+path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
 path_trane_exe = "%tra%"
 
 # TRANE:
 # ------
 if not use_existing_results:
     print("Start TRANE-simulations")
-    z_TRANE, parameters = run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, True)
+    z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True)
     print("TRANE-simulations completed")
 
 # Make folder for results. If folder already exists, make a new one folder name to avoid writing over old results
@@ -68,7 +64,7 @@ nx = z_TRANE[0].shape[0]
 ny = z_TRANE[0].shape[1]
 if not use_existing_results:
     print("Start APS-simulations")
-    z_APS = run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, True)
+    z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True)
     print("APS-simulations completed")
 
 save_threshold_grids_as_png(parameters)
