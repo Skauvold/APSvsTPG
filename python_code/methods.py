@@ -16,6 +16,63 @@ from variogram.variogram import SphericalVariogram
 from variogram.simulate import simulate_gaussian_field
 
 
+MODEL_CONFIGS = {
+    "1": {
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "1.282"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2.rmswell"],
+    },
+    "2": {
+        "facies_models": [
+            {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
+        ],
+        "trends": [("1", "0.0"), ("2", "0.8416")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 400.0, "subrange": 400.0, "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell"],
+    },
+    "3": {
+        "facies_models": [
+            {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
+        ],
+        "trends": [("1", "0.0"), ("2", "0.8416")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 400.0, "subrange": 400.0, "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
+    },
+    "4": {
+        "facies_models": [
+            {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
+        ],
+        "trends": [("1", "0.0"), ("2", "0.8416")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 800.0, "subrange": 800.0, "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
+    },
+}
+
+GRID_NX = 151
+GRID_NY = 101
+GRID_NZ = 2
+X_LENGTH = 6000.0
+Y_LENGTH = 4000.0
+Z_LENGTH = 20.0
+
+
 def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False):
     os.chdir(path_trane_models)
     modelfile_path = os.path.join(path_trane_models, "model" + model_number + ".xml")
@@ -54,13 +111,12 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         nz   = int(lines[15].split()[2])
         data = lines[20].split()
 
-        x    = np.linspace(0.0, x_length, num=nx)
-        y    = np.linspace(0.0, y_length, num=ny)
-        X, Y = np.meshgrid(x, y)
-        X2, Y2 = np.meshgrid(y, x)
+        x_lin = np.linspace(0.0, x_length, num=nx)
+        y_lin = np.linspace(0.0, y_length, num=ny)
+        X2, Y2 = np.meshgrid(y_lin, x_lin)
         z = X2 ** 2 - Y2 ** 2
 
-        temp = np.zeros((nx,ny,nz))
+        temp = np.zeros((nx, ny, nz))
         counter = 0
         for i in range(0, nx):
             for j in range(0, ny):
@@ -69,20 +125,22 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
                     counter += 1
         for i in range(0, nx):
             for j in range(0, ny):
-                for k in range(0, nz):
-                    if k == 0:
-                        z[i][j] = temp[i][j][nz-k-1]
+                z[i][j] = temp[i][j][nz - 1]
+                # Backup:
+                # for k in range(0, nz):
+                #     if k == 0:
+                #         z[i][j] = temp[i][j][nz-k-1]
 
         out_z.append(z)
-        if iteration == 0:
-            parameters = [dx, dy, x_length, y_length]
+
+    parameters = [dx, dy, x_length, y_length]
     if print_info:
         _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
         print()
     return out_z, parameters
 
 def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False):
-    if model_number == "1" or model_number == "2" or model_number == "3":
+    if model_number in ("1", "2", "3"):
         v1_variogram = "genexp"
         v1_range_x = 800.0
         v1_range_y = 500.0
@@ -97,7 +155,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         v1_azimuth = 30.0 * 3.141592 / 180.0 # In radians, not degrees
         v1_genexp_power = 1.5
 
-    if model_number == "2" or model_number == "3":
+    if model_number in ("2", "3"):
         v2_variogram = "genexp"
         v2_range_x = 400.0
         v2_range_y = 400.0
@@ -125,12 +183,12 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
                 t1[i][j] = norm.ppf(p_F1[i][j])
                 p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
                 t2[i][j] = norm.ppf(p1_p2)
-            elif model_number == "2" or model_number == "3" or model_number == "4":
+            elif model_number in ("2", "3", "4"):
                 t1[i][j] = norm.ppf(p_F3[i][j])
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
-    if model_number == "2" or model_number == "3" or model_number == "4":
+    if model_number in ("2", "3", "4"):
         v2 = GeneralExponentialVariogram(v2_range_x, v2_range_y, v2_range_z, azi=v2_azimuth, power=v2_genexp_power)
 
     out_z = []
@@ -138,7 +196,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         if print_info:
             _print_progress_bar(iteration, n_simulations, prefix="Progress")
         s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed = iteration)
-        if model_number == "2" or model_number == "3" or model_number == "4":
+        if model_number in ("2", "3", "4"):
             s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed = iteration)
         z = np.ndarray(s1.shape)
         for i in range(0, nx):
@@ -150,7 +208,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
                         z[i][j] = 2
                     else:
                         z[i][j] = 3
-                elif model_number == "2" or model_number == "3" or model_number == "4":
+                elif model_number in ("2", "3", "4"):
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 3
                     elif s2[i][j] < t2[i][j]:
@@ -164,13 +222,13 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     return out_z
 
 
-def _print_progress_bar(current, total, prefix="", bar_length=40):
+def _print_progress_bar(current, total, prefix="", bar_length=80):
     BLUE = "\033[34m"
     RESET = "\033[0m"
     fraction = current / total
     filled = int(bar_length * fraction)
     bar = "█" * filled + "░" * (bar_length - filled)
-    print(f"\r  {prefix}: {BLUE}|{bar}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
+    print(f"\r{prefix}: {BLUE}|{bar}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):

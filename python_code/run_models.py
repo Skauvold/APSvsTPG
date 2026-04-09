@@ -22,6 +22,7 @@ verbose = True
 plot_histograms = True
 
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
+# path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
 path_trane_results_to_save = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
 path_trane_exe = "%tra%"
@@ -46,9 +47,12 @@ os.chdir(path_trane_results_to_save)
 # TRANE
 # ============================================================
 if RUN_TRANE:
-    print(f"\n{RED}TRANE-simulations{RESET}")
+    print(f"\n{RED}╔{'═' * 48}╗")
+    print(f"║{'TRANE simulations':^48}║")
+    print(f"╚{'═' * 48}╝{RESET}")
     if not use_existing_results:
         z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True)
+        os.chdir(path_trane_results_to_save)
         with open("z_TRANE", "wb") as fp:
             pickle.dump(z_TRANE, fp)
         with open("parameters", "wb") as fp:
@@ -75,23 +79,25 @@ if RUN_TRANE:
     if verbose:
         print()
         print("=" * 50)
-        print("  Results")
+        print("Results")
         print("=" * 50)
-        print("  Sum connected area:")
+        print("Sum connected area:")
         for i in range(0, len(sum_connected_TRANE), 5):
             row = ", ".join(f"{v:12.2f}" for v in sum_connected_TRANE[i:i+5])
-            print(f"    {row}")
-        # print(f"  Volume fractions:          {v_TRANE}")
-        print(f"  Connected (filtered):      {len(count_connected_filtered_TRANE)} / {len(count_connected_TRANE)}")
-        print(f"  Mean connected nodes:      {statistics.mean(count_connected_filtered_TRANE):.2f}")
-        print(f"  Stdev connected nodes:     {statistics.stdev(count_connected_filtered_TRANE):.2f}")
-        print(f"  Max connected nodes:       {max(count_connected_filtered_TRANE)}")
+            print(f"  {row}")
+        # print(f"Volume fractions:          {v_TRANE}")
+        print(f"Connected (filtered):      {len(count_connected_filtered_TRANE)} / {len(count_connected_TRANE)}")
+        print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_TRANE):.2f}")
+        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_TRANE):.2f}")
+        print(f"Max connected nodes:       {max(count_connected_filtered_TRANE)}")
 
 # ============================================================
 # APS
 # ============================================================
 if RUN_APS:
-    print(f"\n\n{RED}APS-simulations{RESET}")
+    print(f"\n\n{RED}╔{'═' * 48}╗")
+    print(f"║{'APS simulations':^48}║")
+    print(f"╚{'═' * 48}╝{RESET}")
     if not RUN_TRANE:
         # Load parameters from file if TRANE was not run
         with open(os.path.join(path_trane_results_to_load, "parameters"), "rb") as fp:
@@ -123,17 +129,17 @@ if RUN_APS:
     if verbose:
         print()
         print("=" * 50)
-        print("  Results")
+        print("Results")
         print("=" * 50)
-        print("  Sum connected area:")
+        print("Sum connected area:")
         for i in range(0, len(sum_connected_APS), 5):
             row = ", ".join(f"{v:12.2f}" for v in sum_connected_APS[i:i+5])
-            print(f"    {row}")
-        # print(f"  Volume fractions:          {v_APS}")
-        print(f"  Connected (filtered):      {len(count_connected_filtered_APS)} / {len(count_connected_APS)}")
-        print(f"  Mean connected nodes:      {statistics.mean(count_connected_filtered_APS):.2f}")
-        print(f"  Stdev connected nodes:     {statistics.stdev(count_connected_filtered_APS):.2f}")
-        print(f"  Max connected nodes:       {max(count_connected_filtered_APS)}")
+            print(f"  {row}")
+        # print(f"Volume fractions:          {v_APS}")
+        print(f"Connected (filtered):      {len(count_connected_filtered_APS)} / {len(count_connected_APS)}")
+        print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_APS):.2f}")
+        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_APS):.2f}")
+        print(f"Max connected nodes:       {max(count_connected_filtered_APS)}")
 
 # ============================================================
 # Histograms
