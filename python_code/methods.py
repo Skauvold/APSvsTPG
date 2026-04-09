@@ -2,7 +2,7 @@ from datetime import datetime
 import math
 import os
 import subprocess
-import xml.etree.ElementTree
+import sys
 
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -73,34 +73,127 @@ Y_LENGTH = 4000.0
 Z_LENGTH = 20.0
 
 
+def _xml_tag(indent, tag, value):
+    prefix = f"{indent}<{tag}>"
+    width = max(35, len(prefix) + 1)
+    return f"{prefix:<{width}}{str(value):<33}</{tag}>"
+
+
+def _build_model_xml(model_number, seed, output_dir):
+    cfg = MODEL_CONFIGS[model_number]
+
+    fm_parts = []
+    for fm in cfg["facies_models"]:
+        fm_parts += [
+            "    <facies-model>",
+            _xml_tag("      ", "parent-facies-name", fm["parent"]),
+            _xml_tag("      ", "facies-names",       fm["names"]),
+            _xml_tag("      ", "residual-ids",       fm["residual_ids"]),
+            _xml_tag("      ", "trend-ids",          fm["trend_ids"]),
+            "    </facies-model>",
+        ]
+
+    trend_parts = []
+    for tid, value in cfg["trends"]:
+        trend_parts += [
+            "    <trend>",
+            _xml_tag("      ", "trend-id", tid),
+            _xml_tag("      ", "value",    value),
+            "    </trend>",
+        ]
+
+    res_parts = []
+    for r in cfg["residuals"]:
+        res_parts += [
+            "    <residual-field>",
+            _xml_tag("      ", "residual-id", r["id"]),
+            "      <variogram>",
+            _xml_tag("        ", "standard-deviation", 1),
+            _xml_tag("        ", "variogram-type",     r["type"]),
+            _xml_tag("        ", "range",              r["range"]),
+            _xml_tag("        ", "subrange",           r["subrange"]),
+            _xml_tag("        ", "power",              r["power"]),
+            _xml_tag("        ", "z-range",            Z_LENGTH),
+            _xml_tag("        ", "azimuth",            r["azimuth"]),
+            _xml_tag("        ", "dip",                "0.0"),
+            "      </variogram>",
+            "    </residual-field>",
+        ]
+
+    well_parts = []
+    for well in cfg["wells"]:
+        well_parts += [
+            "    <well>",
+            _xml_tag("      ", "file-name", well),
+            "    </well>",
+        ]
+
+    hbelts = "\n".join(fm_parts + trend_parts + res_parts)
+    wells  = "\n".join(well_parts)
+
+    lines = [
+        '<?xml version="1.0"?>',
+        '<trane>',
+        '  <project-settings>',
+        _xml_tag("    ", "method",               "simulation"),
+        _xml_tag("    ", "seed",                 seed),
+        _xml_tag("    ", "n-threads",            4),
+        _xml_tag("    ", "logging-level-screen", 2),
+        '  </project-settings>',
+        '  <grid-description>',
+        '    <grid-resolution>',
+        _xml_tag("      ", "nx", GRID_NX),
+        _xml_tag("      ", "ny", GRID_NY),
+        _xml_tag("      ", "nz", GRID_NZ),
+        '    </grid-resolution>',
+        '    <volume>',
+        _xml_tag("      ", "x-length", X_LENGTH),
+        _xml_tag("      ", "y-length", Y_LENGTH),
+        _xml_tag("      ", "z-length", Z_LENGTH),
+        _xml_tag("      ", "z-start",  "0.0"),
+        '    </volume>',
+        '  </grid-description>',
+        '  <h-belts>',
+        hbelts,
+        '  </h-belts>',
+        '  <well-data>',
+        wells,
+        '  </well-data>',
+        '  <io-settings>',
+        _xml_tag("    ", "input-directory",                      "input"),
+        _xml_tag("    ", "output-directory",                     output_dir),
+        _xml_tag("    ", "result-file-roff",                     "result.roff"),
+        _xml_tag("    ", "facies-probability-file-prefix-roff",  "probabilities.roff"),
+        _xml_tag("    ", "facies-probability-file-prefix-storm", "probabilities.storm"),
+        _xml_tag("    ", "trend-file-prefix-storm",              "trend.storm"),
+        _xml_tag("    ", "residual-field-file-prefix-storm",     "residual_field.storm"),
+        _xml_tag("    ", "log-file",                             "trane.log"),
+        '  </io-settings>',
+        '</trane>',
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False):
     os.chdir(path_trane_models)
-    modelfile_path = os.path.join(path_trane_models, "model" + model_number + ".xml")
-    # input_path = os.path.join(path_trane_models, "input")
-    et = xml.etree.ElementTree.parse(modelfile_path)
-    
+    dx = X_LENGTH / GRID_NX
+    dy = Y_LENGTH / GRID_NY
+
     out_z = []
-    parameters = []
     for iteration in range(0, n_simulations):
         if print_info:
             _print_progress_bar(iteration, n_simulations, prefix="Progress")
-        seed            = iteration
-        seed_tag        = et.findall('.//seed')[0]
-        seed_tag.text   = str(seed)
-        output_tag      = et.findall('.//output-directory')[0]
-        output_tag.text = "output" + model_number + "_edited"
-        nx       = int(et.findall('.//nx')[0].text.strip())
-        ny       = int(et.findall('.//ny')[0].text.strip())
-        x_length = float(et.findall('.//x-length')[0].text.strip())
-        y_length = float(et.findall('.//y-length')[0].text.strip())
-        dx = x_length / nx
-        dy = y_length / ny
-        et.write('model' + model_number + '_edited.xml')
+        output_dir            = "output" + model_number + "_edited"
         modelfile_edited_path = os.path.join(path_trane_models, "model" + model_number + "_edited.xml")
-        output_path           = os.path.join(path_trane_models, "output" + model_number + "_edited")
+        output_path           = os.path.join(path_trane_models, output_dir)
         results_path          = os.path.join(output_path, "result.roff")
+        with open(modelfile_edited_path, 'w') as f:
+            f.write(_build_model_xml(model_number, seed=iteration, output_dir=output_dir))
 
-        subprocess.call([path_trane_exe, modelfile_edited_path], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        result = subprocess.run([path_trane_exe, modelfile_edited_path], shell=True)
+        if result.returncode != 0:
+            print(f"\033[31m\nERROR: TRANE failed on iteration {iteration} with return code {result.returncode}\033[0m")
+            sys.exit(1)
 
         lines = []
         with open(results_path) as f:
@@ -111,8 +204,8 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         nz   = int(lines[15].split()[2])
         data = lines[20].split()
 
-        x_lin = np.linspace(0.0, x_length, num=nx)
-        y_lin = np.linspace(0.0, y_length, num=ny)
+        x_lin = np.linspace(0.0, X_LENGTH, num=nx)
+        y_lin = np.linspace(0.0, Y_LENGTH, num=ny)
         X2, Y2 = np.meshgrid(y_lin, x_lin)
         z = X2 ** 2 - Y2 ** 2
 
@@ -133,42 +226,28 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
 
         out_z.append(z)
 
-    parameters = [dx, dy, x_length, y_length]
+    parameters = [dx, dy, X_LENGTH, Y_LENGTH]
     if print_info:
         _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
         print()
     return out_z, parameters
 
 def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False):
-    if model_number in ("1", "2", "3"):
-        v1_variogram = "genexp"
-        v1_range_x = 800.0
-        v1_range_y = 500.0
-        v1_range_z = 20.0
-        v1_azimuth = 30.0 * 3.141592 / 180.0 # In radians, not degrees
-        v1_genexp_power = 1.5
-    elif model_number == "4":
-        v1_variogram = "genexp"
-        v1_range_x = 1600.0
-        v1_range_y = 1000.0
-        v1_range_z = 20.0
-        v1_azimuth = 30.0 * 3.141592 / 180.0 # In radians, not degrees
-        v1_genexp_power = 1.5
+    cfg = MODEL_CONFIGS[model_number]
+    r1 = cfg["residuals"][0]
+    v1_range_x      = r1["range"]
+    v1_range_y      = r1["subrange"]
+    v1_range_z      = Z_LENGTH
+    v1_azimuth      = r1["azimuth"] * 3.141592 / 180.0  # In radians, not degrees
+    v1_genexp_power = r1["power"]
 
-    if model_number in ("2", "3"):
-        v2_variogram = "genexp"
-        v2_range_x = 400.0
-        v2_range_y = 400.0
-        v2_range_z = 20.0
-        v2_azimuth = 0.0
-        v2_genexp_power = 1.8
-    elif model_number == "4":
-        v2_variogram = "genexp"
-        v2_range_x = 800.0
-        v2_range_y = 800.0
-        v2_range_z = 20.0
-        v2_azimuth = 0.0
-        v2_genexp_power = 1.8
+    if model_number in ("2", "3", "4"):
+        r2 = cfg["residuals"][1]
+        v2_range_x      = r2["range"]
+        v2_range_y      = r2["subrange"]
+        v2_range_z      = Z_LENGTH
+        v2_azimuth      = r2["azimuth"]  # Already 0.0, no conversion needed
+        v2_genexp_power = r2["power"]
  
     p_F1 = np.load("p1_from_TRANE.npy")
     p_F2 = np.load("p2_from_TRANE.npy")

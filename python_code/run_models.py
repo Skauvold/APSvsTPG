@@ -12,12 +12,12 @@ from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_gri
 # ============================================================
 # Options
 # ============================================================
-MODEL = "4"
-n_sim = 20
+MODEL = "1"
+n_sim = 1
 use_existing_results = False
 
 RUN_TRANE = True
-RUN_APS = True
+RUN_APS = False
 verbose = True
 plot_histograms = True
 
@@ -25,9 +25,11 @@ path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_p
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
 path_trane_results_to_save = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
-path_trane_exe = "%tra%"
+# path_trane_exe = "%tra%"
+path_trane_exe = "$env:tra"
 
 RED = "\033[31m"
+BRIGHT_RED = "\033[91m"
 RESET = "\033[0m"
 
 # Make folder for results. If folder already exists, make a new one to avoid overwriting
@@ -47,7 +49,7 @@ os.chdir(path_trane_results_to_save)
 # TRANE
 # ============================================================
 if RUN_TRANE:
-    print(f"\n{RED}╔{'═' * 48}╗")
+    print(f"\n{BRIGHT_RED}╔{'═' * 48}╗")
     print(f"║{'TRANE simulations':^48}║")
     print(f"╚{'═' * 48}╝{RESET}")
     if not use_existing_results:
@@ -95,7 +97,7 @@ if RUN_TRANE:
 # APS
 # ============================================================
 if RUN_APS:
-    print(f"\n\n{RED}╔{'═' * 48}╗")
+    print(f"\n\n{BRIGHT_RED}╔{'═' * 48}╗")
     print(f"║{'APS simulations':^48}║")
     print(f"╚{'═' * 48}╝{RESET}")
     if not RUN_TRANE:
