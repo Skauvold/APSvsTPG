@@ -3,6 +3,7 @@
 import os
 import pickle
 import statistics
+import sys
 
 from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_grids_as_png,
                      count_connected_grid_nodes, calculate_and_save_facies_prob_maps,
@@ -13,20 +14,20 @@ from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_gri
 # Options
 # ============================================================
 MODEL = "1"
-n_sim = 1
+n_sim = 3
 use_existing_results = False
 
 RUN_TRANE = True
 RUN_APS = False
 verbose = True
+verbose_trane = False
 plot_histograms = True
 
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
 path_trane_results_to_save = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
-# path_trane_exe = "%tra%"
-path_trane_exe = "$env:tra"
+path_trane_exe = "%tra%"
 
 RED = "\033[31m"
 BRIGHT_RED = "\033[91m"
@@ -49,11 +50,16 @@ os.chdir(path_trane_results_to_save)
 # TRANE
 # ============================================================
 if RUN_TRANE:
+    resolved_trane_exe = os.path.expandvars(path_trane_exe)
+    if not os.path.isfile(resolved_trane_exe):
+        print(f"{RED}ERROR: TRANE executable not found: '{resolved_trane_exe}' (from '{path_trane_exe}'){RESET}")
+        sys.exit(1)
+
     print(f"\n{BRIGHT_RED}╔{'═' * 48}╗")
     print(f"║{'TRANE simulations':^48}║")
     print(f"╚{'═' * 48}╝{RESET}")
     if not use_existing_results:
-        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True)
+        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane)
         os.chdir(path_trane_results_to_save)
         with open("z_TRANE", "wb") as fp:
             pickle.dump(z_TRANE, fp)

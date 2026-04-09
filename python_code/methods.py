@@ -174,7 +174,7 @@ def _build_model_xml(model_number, seed, output_dir):
     return "\n".join(lines) + "\n"
 
 
-def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False):
+def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False, verbose_trane=False):
     os.chdir(path_trane_models)
     dx = X_LENGTH / GRID_NX
     dy = Y_LENGTH / GRID_NY
@@ -190,7 +190,8 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         with open(modelfile_edited_path, 'w') as f:
             f.write(_build_model_xml(model_number, seed=iteration, output_dir=output_dir))
 
-        result = subprocess.run([path_trane_exe, modelfile_edited_path], shell=True)
+        trane_output = None if verbose_trane else subprocess.DEVNULL
+        result = subprocess.run([path_trane_exe, modelfile_edited_path], shell=True, stdout=trane_output, stderr=trane_output)
         if result.returncode != 0:
             print(f"\033[31m\nERROR: TRANE failed on iteration {iteration} with return code {result.returncode}\033[0m")
             sys.exit(1)
