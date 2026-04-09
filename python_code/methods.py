@@ -26,7 +26,7 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
     parameters = []
     for iteration in range(0, n_simulations):
         if print_info:
-            print("iteration = " + str(iteration))
+            _print_progress_bar(iteration, n_simulations, prefix="Progress")
         seed            = iteration
         seed_tag        = et.findall('.//seed')[0]
         seed_tag.text   = str(seed)
@@ -76,6 +76,9 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         out_z.append(z)
         if iteration == 0:
             parameters = [dx, dy, x_length, y_length]
+    if print_info:
+        _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
+        print()
     return out_z, parameters
 
 def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False):
@@ -133,7 +136,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     out_z = []
     for iteration in range(0, n_simulations):
         if print_info:
-            print("iteration = " + str(iteration))
+            _print_progress_bar(iteration, n_simulations, prefix="Progress")
         s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed = iteration)
         if model_number == "2" or model_number == "3" or model_number == "4":
             s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed = iteration)
@@ -155,10 +158,22 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
                     else:
                         z[i][j] = 2
         out_z.append(z)
+    if print_info:
+        _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
+        print()
     return out_z
 
+
+def _print_progress_bar(current, total, prefix="", bar_length=40):
+    BLUE = "\033[34m"
+    RESET = "\033[0m"
+    fraction = current / total
+    filled = int(bar_length * fraction)
+    bar = "█" * filled + "░" * (bar_length - filled)
+    print(f"\r  {prefix}: {BLUE}|{bar}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
+
+
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):
-    print("save_facies_grids_as_png for " + prefix)
     F1 = ( 40.0/255.0, 118.0/255.0, 255.0/255.0) # Blue
     F2 = (242.0/255.0, 255.0/255.0,  57.0/255.0) # Yellow
     F3 = (138.0/255.0,  43.0/255.0, 226.0/255.0) # Purple
@@ -258,7 +273,6 @@ def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observ
     return count_connected
   
 def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
-    print("calculate_and_save_facies_prob_maps for " + prefix)
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
     dx = parameters[0]
@@ -286,7 +300,6 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
                 p_F1[i][j]  = (p_F1[i][j]  * iteration + a) / (iteration + 1)
                 p_F2[i][j]  = (p_F2[i][j]  * iteration + b) / (iteration + 1)
                 p_F3[i][j]  = (p_F3[i][j]  * iteration + c) / (iteration + 1)
-    print("Done calculating facies probabilities")
     np.save("p1_from_" + prefix, p_F1)
     np.save("p2_from_" + prefix, p_F2)
     np.save("p3_from_" + prefix, p_F3)
@@ -313,7 +326,6 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
         plt.close()
 
 def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins):
-    print("plot_histogram_of_connected_cells for " + prefix)
     fig = plt.figure(frameon=False)
     binwidth = xmax / n_bins
     density = False
