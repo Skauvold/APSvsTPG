@@ -304,11 +304,12 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
 
 def _print_progress_bar(current, total, prefix="", bar_length=80):
     BLUE = "\033[34m"
+    GREY = "\033[90m"
     RESET = "\033[0m"
     fraction = current / total
     filled = int(bar_length * fraction)
-    bar = "█" * filled + "░" * (bar_length - filled)
-    print(f"\r{prefix}: {BLUE}|{bar}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
+    bar = f"{BLUE}{'█' * filled}{GREY}{'░' * (bar_length - filled)}{RESET}"
+    print(f"\r{prefix}: {BLUE}|{RESET}{bar}{BLUE}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):
