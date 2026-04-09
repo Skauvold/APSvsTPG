@@ -14,7 +14,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_gri
 # Options
 # ============================================================
 MODEL = "1"
-n_sim = 3
+n_sim = 5
 use_existing_results = False
 
 RUN_TRANE = True
@@ -95,9 +95,12 @@ if RUN_TRANE:
             print(f"  {row}")
         # print(f"Volume fractions:          {v_TRANE}")
         print(f"Connected (filtered):      {len(count_connected_filtered_TRANE)} / {len(count_connected_TRANE)}")
-        print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_TRANE):.2f}")
-        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_TRANE):.2f}")
-        print(f"Max connected nodes:       {max(count_connected_filtered_TRANE)}")
+        if count_connected_filtered_TRANE:
+            print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_TRANE):.2f}")
+            print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_TRANE):.2f}")
+            print(f"Max connected nodes:       {max(count_connected_filtered_TRANE)}")
+        else:
+            print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
 
 # ============================================================
 # APS
@@ -145,9 +148,12 @@ if RUN_APS:
             print(f"  {row}")
         # print(f"Volume fractions:          {v_APS}")
         print(f"Connected (filtered):      {len(count_connected_filtered_APS)} / {len(count_connected_APS)}")
-        print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_APS):.2f}")
-        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_APS):.2f}")
-        print(f"Max connected nodes:       {max(count_connected_filtered_APS)}")
+        if count_connected_filtered_APS:
+            print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_APS):.2f}")
+            print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_APS):.2f}")
+            print(f"Max connected nodes:       {max(count_connected_filtered_APS)}")
+        else:
+            print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
 
 # ============================================================
 # Histograms
