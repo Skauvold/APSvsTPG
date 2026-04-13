@@ -35,11 +35,13 @@ MODEL_CONFIGS = {
         "facies_models": [
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
         ],
-        "trends": [("1", "1.282"), ("2", "0.0")],
+        # "trends": [("1", "1.282"), ("2", "0.0")],
+        "trends": [("1", "0.1"), ("2", "0.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        # "wells": ["wells/well2.rmswell"],
+        "wells": ["wells/well2B.rmswell"],
     },
     "2": {
         "n_facies": 3,
@@ -91,6 +93,7 @@ Z_LENGTH = 20.0
 
 WELL_DATA = {
     "wells/well2.rmswell": {"name": "well2", "x": 3000.0, "y": 2000.0, "facies": 1},
+    "wells/well2B.rmswell": {"name": "well2B", "x": 3000.0, "y": 2000.0, "facies": 2},
     "wells/well3.rmswell": {"name": "well3", "x": 3500.0, "y": 2000.0, "facies": 1},
 }
 
