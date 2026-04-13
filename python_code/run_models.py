@@ -112,7 +112,7 @@ if RUN_APS:
         z_APS = _load(_load_pickle_aps, "z_APS")
 
     count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose,
-        save_indices=[0, 1, 2], output_dir=path_output_aps, data_dir=path_pickle_aps)
+        save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps)
 
 # ============================================================
 # Histograms
