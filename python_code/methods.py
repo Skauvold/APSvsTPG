@@ -415,9 +415,9 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices=
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all", output_dir="."):
-    F1 = ( 40.0/255.0, 118.0/255.0, 255.0/255.0) # Blue
-    F2 = (242.0/255.0, 255.0/255.0,  57.0/255.0) # Yellow
-    F3 = (138.0/255.0,  43.0/255.0, 226.0/255.0) # Purple
+    F1 = (255/255,  69/255,   0/255)  # Orange-Red
+    F2 = ( 75/255,   0/255, 130/255)  # Indigo
+    F3 = (  0/255, 206/255, 209/255)  # Dark Turquoise
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
     dx = parameters[0]
@@ -438,7 +438,6 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="
 
     for iteration, z in enumerate(facies_grids):
         if indices_to_save == "all" or iteration in indices_to_save:
-            # To plot the ndarray correctly:
             x_lin = np.linspace(0.0, x_length, num=nx)
             y_lin = np.linspace(0.0, y_length, num=ny)
             Y, X  = np.meshgrid(x_lin, y_lin)
