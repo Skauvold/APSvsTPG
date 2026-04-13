@@ -11,7 +11,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODEL = "0"
+MODEL = "1"
 n_sim = 10
 use_existing_results = False
 
