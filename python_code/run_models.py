@@ -2,6 +2,7 @@
 
 import os
 import sys
+from datetime import datetime
 
 from methods import (run_TRANE_simulations, run_APS_simulations,
                      plot_histogram_of_connected_cells,
@@ -10,8 +11,8 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODEL = "4"
-n_sim = 20
+MODEL = "0"
+n_sim = 10
 use_existing_results = False
 
 RUN_TRANE = True
@@ -22,7 +23,7 @@ plot_histograms = True
 
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
-path_trane_results_to_save = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
+_path_results_base = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
 path_trane_exe = "%tra%"
 
@@ -31,18 +32,41 @@ BRIGHT_RED = "\033[91m"
 RESET = "\033[0m"
 
 
-# Make folder for results. If folder already exists, make a new one to avoid overwriting
-if not os.path.exists(path_trane_results_to_save):
-    os.mkdir(path_trane_results_to_save)
-else:
-    i = 2
-    new_path = path_trane_results_to_save
-    while os.path.exists(new_path):
-        new_path = path_trane_results_to_save + "_" + str(i)
-        i += 1
-    os.mkdir(new_path)
-    path_trane_results_to_save = new_path
-os.chdir(path_trane_results_to_save)
+# Make results folder with timestamp-based name
+_timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
+path_trane_results_to_save = _path_results_base + "_" + _timestamp
+if os.path.exists(path_trane_results_to_save):
+    _i = 2
+    while os.path.exists(path_trane_results_to_save + "_" + str(_i)):
+        _i += 1
+    path_trane_results_to_save = path_trane_results_to_save + "_" + str(_i)
+os.makedirs(path_trane_results_to_save)
+
+path_output_trane = os.path.join(path_trane_results_to_save, "output_TRANE")
+path_output_aps   = os.path.join(path_trane_results_to_save, "output_APS")
+path_pickle_trane = os.path.join(path_output_trane, "pickle_backup")
+path_pickle_aps   = os.path.join(path_output_aps,   "pickle_backup")
+os.makedirs(path_pickle_trane)
+os.makedirs(path_pickle_aps)
+
+with open(os.path.join(path_trane_results_to_save, "run_log.txt"), 'w') as _f:
+    _f.write("Run log\n")
+    _f.write(f"Date/time:            {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    _f.write("\n")
+    _f.write(f"MODEL:                {MODEL}\n")
+    _f.write(f"n_sim:                {n_sim}\n")
+    _f.write(f"use_existing_results: {use_existing_results}\n")
+    _f.write(f"RUN_TRANE:            {RUN_TRANE}\n")
+    _f.write(f"RUN_APS:              {RUN_APS}\n")
+    _f.write(f"verbose:              {verbose}\n")
+    _f.write(f"verbose_trane:        {verbose_trane}\n")
+    _f.write(f"plot_histograms:      {plot_histograms}\n")
+    _f.write("\n")
+    _f.write(f"path_trane_models:    {path_trane_models}\n")
+    _f.write(f"path_trane_exe:       {path_trane_exe}\n")
+    _f.write(f"Results saved to:     {path_trane_results_to_save}\n")
+    if use_existing_results:
+        _f.write(f"Loaded results from:  {path_trane_results_to_load}\n")
 
 if RUN_TRANE:
     resolved_trane_exe = os.path.expandvars(path_trane_exe)
@@ -53,24 +77,26 @@ if RUN_TRANE:
     _print_header('TRANE simulations')
     if not use_existing_results:
         z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane)
-        os.chdir(path_trane_results_to_save)
-        _save("z_TRANE", z_TRANE)
-        _save("parameters", parameters)
+        _save(os.path.join(path_pickle_trane, "z_TRANE"), z_TRANE)
+        _save(os.path.join(path_pickle_trane, "parameters"), parameters)
     else:
         print("  Loading from file...")
-        z_TRANE    = _load(path_trane_results_to_load, "z_TRANE")
-        parameters = _load(path_trane_results_to_load, "parameters")
+        _load_pickle_trane = os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
+        z_TRANE    = _load(_load_pickle_trane, "z_TRANE")
+        parameters = _load(_load_pickle_trane, "parameters")
 
     dx = parameters[0]
     dy = parameters[1]
 
-    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, save_thresholds=True)
+    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose,
+        save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane)
 
 if RUN_APS:
     _print_header('APS simulations')
     if not RUN_TRANE:
-        parameters = _load(path_trane_results_to_load, "parameters")
-        z_TRANE    = _load(path_trane_results_to_load, "z_TRANE")
+        _load_pickle_trane = os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
+        parameters = _load(_load_pickle_trane, "parameters")
+        z_TRANE    = _load(_load_pickle_trane, "z_TRANE")
         dx = parameters[0]
         dy = parameters[1]
 
@@ -78,12 +104,15 @@ if RUN_APS:
     ny = z_TRANE[0].shape[1]
 
     if not use_existing_results:
-        z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True)
-        _save("z_APS", z_APS)
+        _aps_data_dir = path_pickle_trane if RUN_TRANE else os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
+        z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True, data_dir=_aps_data_dir)
+        _save(os.path.join(path_pickle_aps, "z_APS"), z_APS)
     else:
-        z_APS = _load(path_trane_results_to_load, "z_APS")
+        _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
+        z_APS = _load(_load_pickle_aps, "z_APS")
 
-    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, save_indices=[0, 1, 2])
+    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose,
+        save_indices=[0, 1, 2], output_dir=path_output_aps, data_dir=path_pickle_aps)
 
 # ============================================================
 # Histograms
@@ -92,8 +121,10 @@ if plot_histograms and RUN_TRANE and RUN_APS:
     max1 = max(count_connected_filtered_TRANE)
     max2 = max(count_connected_filtered_APS)
     max3 = max(max1, max2)
-    plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3*1.05, 0.0, 100, 50)
-    plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3*1.05, 0.0, 100, 50)
+    plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3*1.05, 0.0, 100, 50,
+        output_dir=path_output_trane)
+    plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3*1.05, 0.0, 100, 50,
+        output_dir=path_output_aps)
 
 
 

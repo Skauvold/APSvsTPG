@@ -19,6 +19,16 @@ from variogram.simulate import simulate_gaussian_field
 
 
 MODEL_CONFIGS = {
+    "0": {
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
+        ],
+        "trends": [("1", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell"],
+    },
     "1": {
         "facies_models": [
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
@@ -261,7 +271,7 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         print()
     return out_z, parameters
 
-def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False):
+def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False, data_dir="."):
     cfg = MODEL_CONFIGS[model_number]
     r1 = cfg["residuals"][0]
     v1_range_x      = r1["range"]
@@ -278,9 +288,9 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         v2_azimuth      = r2["azimuth"]  # Already 0.0, no conversion needed
         v2_genexp_power = r2["power"]
  
-    p_F1 = np.load("p1_from_TRANE.npy")
-    p_F2 = np.load("p2_from_TRANE.npy")
-    p_F3 = np.load("p3_from_TRANE.npy")
+    p_F1 = np.load(os.path.join(data_dir, "p1_from_TRANE.npy"))
+    p_F2 = np.load(os.path.join(data_dir, "p2_from_TRANE.npy"))
+    p_F3 = np.load(os.path.join(data_dir, "p3_from_TRANE.npy"))
     
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
@@ -377,11 +387,11 @@ def _load(path, name):
         return pickle.load(fp)
 
 
-def _analyse(z, parameters, prefix, dx, dy, verbose, save_indices="all", save_thresholds=False):
-    save_facies_grids_as_png(z, parameters, prefix, save_indices)
-    calculate_and_save_facies_prob_maps(z, parameters, prefix)
+def _analyse(z, parameters, prefix, dx, dy, verbose, save_indices="all", save_thresholds=False, output_dir=".", data_dir="."):
+    save_facies_grids_as_png(z, parameters, prefix, save_indices, output_dir=output_dir)
+    calculate_and_save_facies_prob_maps(z, parameters, prefix, output_dir=output_dir, data_dir=data_dir)
     if save_thresholds:
-        save_threshold_grids_as_png(parameters)
+        save_threshold_grids_as_png(parameters, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
     count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
     sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
     count_connected_filtered = [c for c in count_connected if c != -1]
@@ -390,7 +400,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, save_indices="all", save_th
     return count_connected_filtered
 
 
-def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):
+def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all", output_dir="."):
     F1 = ( 40.0/255.0, 118.0/255.0, 255.0/255.0) # Blue
     F2 = (242.0/255.0, 255.0/255.0,  57.0/255.0) # Yellow
     F3 = (138.0/255.0,  43.0/255.0, 226.0/255.0) # Purple
@@ -408,7 +418,7 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="
     y = [2000.0, 2000.0]
     extent = x_min, x_max, y_min, y_max
 
-    folder = "facies_grids_" + prefix
+    folder = os.path.join(output_dir, "facies_grids_" + prefix)
     if not os.path.exists(folder):
         os.mkdir(folder)
 
@@ -432,9 +442,7 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="
             # img = plt.imshow(z_simbox, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
             img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
             plt.scatter(x, y, facecolors='none', edgecolors='red', s = 150)
-            now = datetime.now()
-            current_time = now.strftime("%H_%M_%S_%f")[:-2]
-            plt.savefig(folder + "\\" + prefix + '_' + current_time + '_it' + str(iteration) + '.png', dpi=100)
+            plt.savefig(os.path.join(folder, prefix + '_it' + str(iteration) + '.png'), dpi=100)
             plt.close()
    
 def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observation, extra_obs=None):
@@ -489,7 +497,7 @@ def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observ
                 count_connected.append(-1)
     return count_connected
   
-def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
+def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, output_dir=".", data_dir="."):
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
     dx = parameters[0]
@@ -517,9 +525,9 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
                 p_F1[i][j]  = (p_F1[i][j]  * iteration + a) / (iteration + 1)
                 p_F2[i][j]  = (p_F2[i][j]  * iteration + b) / (iteration + 1)
                 p_F3[i][j]  = (p_F3[i][j]  * iteration + c) / (iteration + 1)
-    np.save("p1_from_" + prefix, p_F1)
-    np.save("p2_from_" + prefix, p_F2)
-    np.save("p3_from_" + prefix, p_F3)
+    np.save(os.path.join(data_dir, "p1_from_" + prefix), p_F1)
+    np.save(os.path.join(data_dir, "p2_from_" + prefix), p_F2)
+    np.save(os.path.join(data_dir, "p3_from_" + prefix), p_F3)
     for i, p in enumerate([p_F1, p_F2, p_F3]):
         # To plot the ndarray correctly:
         x_lin = np.linspace(0.0, x_length, num=nx)
@@ -537,12 +545,10 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix):
         fig.add_axes(ax)
         img = plt.imshow(p_for_plotting, cmap = 'Blues', alpha = 1.0, interpolation='none', extent = extent, vmin = 0.0, vmax = 1.0)
         fig.colorbar(img, ax=ax, shrink=0.5)
-        now = datetime.now()
-        current_time = now.strftime("%H_%M_%S_%f")[:-2]
-        plt.savefig(prefix + '_' + current_time + '_p' + str(i+1) + '_n' + str(len(facies_grids)) + '.png', dpi=100)
+        plt.savefig(os.path.join(output_dir, prefix + '_p' + str(i+1) + '_n' + str(len(facies_grids)) + '.png'), dpi=100)
         plt.close()
 
-def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins):
+def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
     fig = plt.figure(frameon=False)
     binwidth = xmax / n_bins
     density = False
@@ -559,9 +565,7 @@ def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, y
     plt.xlim(xmin=xmin, xmax=xmax)
     if True:
         plt.ylim(ymin=ymin, ymax=ymax)
-    now = datetime.now()
-    current_time = now.strftime("%H_%M_%S_%f")[:-2]
-    plt.savefig(prefix + '_' + current_time + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png', dpi=100)
+    plt.savefig(os.path.join(output_dir, prefix + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png'), dpi=100)
     # plt.show()
     plt.close()
 
@@ -580,10 +584,10 @@ def calculate_volume_fractions(facies_grids):
         v[3].append(percent_dict[3])
     return v
 
-def save_threshold_grids_as_png(parameters):
-    p_F1 = np.load("p1_from_TRANE.npy")
-    p_F2 = np.load("p2_from_TRANE.npy")
-    p_F3 = np.load("p3_from_TRANE.npy")
+def save_threshold_grids_as_png(parameters, output_dir=".", data_dir=".", prefix="TRANE"):
+    p_F1 = np.load(os.path.join(data_dir, "p1_from_" + prefix + ".npy"))
+    p_F2 = np.load(os.path.join(data_dir, "p2_from_" + prefix + ".npy"))
+    p_F3 = np.load(os.path.join(data_dir, "p3_from_" + prefix + ".npy"))
 
     nx = p_F1.shape[0]
     ny = p_F1.shape[1]
@@ -623,7 +627,5 @@ def save_threshold_grids_as_png(parameters):
         fig.add_axes(ax)
         img = plt.imshow(t_for_plotting, cmap = 'Blues', alpha = 1.0, interpolation='none', extent = extent, vmin = -5.0, vmax = 5.0)
         fig.colorbar(img, ax=ax, shrink=0.5)
-        now = datetime.now()
-        current_time = now.strftime("%H_%M_%S_%f")[:-2]
-        plt.savefig('APS_' + current_time + '_t' + str(i+1) + '.png', dpi=100)
+        plt.savefig(os.path.join(output_dir, prefix + '_t' + str(i+1) + '.png'), dpi=100)
         plt.close()
