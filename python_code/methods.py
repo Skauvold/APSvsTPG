@@ -74,6 +74,23 @@ X_LENGTH = 6000.0
 Y_LENGTH = 4000.0
 Z_LENGTH = 20.0
 
+WELL_DATA = {
+    "wells/well2.rmswell": {"name": "well2", "x": 3000.0, "y": 2000.0, "facies": 1},
+    "wells/well3.rmswell": {"name": "well3", "x": 3500.0, "y": 2000.0, "facies": 1},
+}
+
+
+def _build_well_file(well_name, x, y, facies_code):
+    z_values = [i * 2.0 for i in range(int(Z_LENGTH / 2))]
+    data_lines = [f"{x}   {y}   {z:6.1f}    {facies_code}" for z in z_values]
+    return "\n".join([
+        "1.0",
+        "UNDEFINED",
+        f"{well_name} {x} {y} 0.0",
+        "1",
+        "FACIES DISC 1 F1 2 F2 3 F3",
+    ] + data_lines) + "\n"
+
 
 def _xml_tag(indent, tag, value):
     prefix = f"{indent}<{tag}>"
@@ -180,6 +197,15 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
     os.chdir(path_trane_models)
     dx = X_LENGTH / GRID_NX
     dy = Y_LENGTH / GRID_NY
+
+    cfg = MODEL_CONFIGS[model_number]
+    wells_dir = os.path.join(path_trane_models, "input", "wells")
+    os.makedirs(wells_dir, exist_ok=True)
+    for well_path in cfg["wells"]:
+        wd = WELL_DATA[well_path]
+        well_file_path = os.path.join(path_trane_models, "input", well_path)
+        with open(well_file_path, 'w') as f:
+            f.write(_build_well_file(wd["name"], wd["x"], wd["y"], wd["facies"]))
 
     out_z = []
     for iteration in range(0, n_simulations):
