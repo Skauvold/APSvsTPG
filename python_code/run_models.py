@@ -1,24 +1,21 @@
 #!/usr/bin/env python
 
 import os
-import pickle
-import statistics
 import sys
 
-from methods import (run_TRANE_simulations, run_APS_simulations, save_facies_grids_as_png,
-                     count_connected_grid_nodes, calculate_and_save_facies_prob_maps,
-                     plot_histogram_of_connected_cells, calculate_volume_fractions,
-                     save_threshold_grids_as_png)
+from methods import (run_TRANE_simulations, run_APS_simulations,
+                     plot_histogram_of_connected_cells,
+                     _analyse, _print_header, _save, _load)
 
 # ============================================================
 # Options
 # ============================================================
 MODEL = "1"
-n_sim = 5
+n_sim = 20
 use_existing_results = False
 
 RUN_TRANE = True
-RUN_APS = False
+RUN_APS = True
 verbose = True
 verbose_trane = False
 plot_histograms = True
@@ -33,6 +30,7 @@ RED = "\033[31m"
 BRIGHT_RED = "\033[91m"
 RESET = "\033[0m"
 
+
 # Make folder for results. If folder already exists, make a new one to avoid overwriting
 if not os.path.exists(path_trane_results_to_save):
     os.mkdir(path_trane_results_to_save)
@@ -46,75 +44,33 @@ else:
     path_trane_results_to_save = new_path
 os.chdir(path_trane_results_to_save)
 
-# ============================================================
-# TRANE
-# ============================================================
 if RUN_TRANE:
     resolved_trane_exe = os.path.expandvars(path_trane_exe)
     if not os.path.isfile(resolved_trane_exe):
         print(f"{RED}ERROR: TRANE executable not found: '{resolved_trane_exe}' (from '{path_trane_exe}'){RESET}")
         sys.exit(1)
 
-    print(f"\n{BRIGHT_RED}╔{'═' * 48}╗")
-    print(f"║{'TRANE simulations':^48}║")
-    print(f"╚{'═' * 48}╝{RESET}")
+    _print_header('TRANE simulations')
     if not use_existing_results:
         z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane)
         os.chdir(path_trane_results_to_save)
-        with open("z_TRANE", "wb") as fp:
-            pickle.dump(z_TRANE, fp)
-        with open("parameters", "wb") as fp:
-            pickle.dump(parameters, fp)
+        _save("z_TRANE", z_TRANE)
+        _save("parameters", parameters)
     else:
         print("  Loading from file...")
-        with open(os.path.join(path_trane_results_to_load, "z_TRANE"), "rb") as fp:
-            z_TRANE = pickle.load(fp)
-        with open(os.path.join(path_trane_results_to_load, "parameters"), "rb") as fp:
-            parameters = pickle.load(fp)
+        z_TRANE    = _load(path_trane_results_to_load, "z_TRANE")
+        parameters = _load(path_trane_results_to_load, "parameters")
 
     dx = parameters[0]
     dy = parameters[1]
 
-    save_facies_grids_as_png(z_TRANE, parameters, 'TRANE')
-    calculate_and_save_facies_prob_maps(z_TRANE, parameters, 'TRANE')
-    save_threshold_grids_as_png(parameters)
+    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, save_thresholds=True)
 
-    count_connected_TRANE = count_connected_grid_nodes(z_TRANE, parameters, 3000.0, 2000.0, [3500, 2000])
-    sum_connected_TRANE = [dx * dy * n for n in count_connected_TRANE]
-    count_connected_filtered_TRANE = [c for c in count_connected_TRANE if c != -1]
-    v_TRANE = calculate_volume_fractions(z_TRANE)
-
-    if verbose:
-        print()
-        print("=" * 50)
-        print("Results")
-        print("=" * 50)
-        print("Sum connected area:")
-        for i in range(0, len(sum_connected_TRANE), 5):
-            row = ", ".join(f"{v:12.2f}" for v in sum_connected_TRANE[i:i+5])
-            print(f"  {row}")
-        # print(f"Volume fractions:          {v_TRANE}")
-        print(f"Connected (filtered):      {len(count_connected_filtered_TRANE)} / {len(count_connected_TRANE)}")
-        if count_connected_filtered_TRANE:
-            print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_TRANE):.2f}")
-            print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_TRANE):.2f}")
-            print(f"Max connected nodes:       {max(count_connected_filtered_TRANE)}")
-        else:
-            print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
-
-# ============================================================
-# APS
-# ============================================================
 if RUN_APS:
-    print(f"\n\n{BRIGHT_RED}╔{'═' * 48}╗")
-    print(f"║{'APS simulations':^48}║")
-    print(f"╚{'═' * 48}╝{RESET}")
+    _print_header('APS simulations')
     if not RUN_TRANE:
-        # Load parameters from file if TRANE was not run
-        with open(os.path.join(path_trane_results_to_load, "parameters"), "rb") as fp:
-            parameters = pickle.load(fp)
-        with open(os.path.join(path_trane_results_to_load, "z_TRANE"), "rb") as fp:
-            z_TRANE = pickle.load(fp)
+        parameters = _load(path_trane_results_to_load, "parameters")
+        z_TRANE    = _load(path_trane_results_to_load, "z_TRANE")
         dx = parameters[0]
         dy = parameters[1]
 
@@ -123,37 +79,11 @@ if RUN_APS:
 
     if not use_existing_results:
         z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True)
-        with open("z_APS", "wb") as fp:
-            pickle.dump(z_APS, fp)
+        _save("z_APS", z_APS)
     else:
-        with open(os.path.join(path_trane_results_to_load, "z_APS"), "rb") as fp:
-            z_APS = pickle.load(fp)
+        z_APS = _load(path_trane_results_to_load, "z_APS")
 
-    save_facies_grids_as_png(z_APS, parameters, 'APS', [0, 1, 2])
-    calculate_and_save_facies_prob_maps(z_APS, parameters, 'APS')
-
-    count_connected_APS = count_connected_grid_nodes(z_APS, parameters, 3000.0, 2000.0, [3500, 2000])
-    sum_connected_APS = [dx * dy * n for n in count_connected_APS]
-    count_connected_filtered_APS = [c for c in count_connected_APS if c != -1]
-    v_APS = calculate_volume_fractions(z_APS)
-
-    if verbose:
-        print()
-        print("=" * 50)
-        print("Results")
-        print("=" * 50)
-        print("Sum connected area:")
-        for i in range(0, len(sum_connected_APS), 5):
-            row = ", ".join(f"{v:12.2f}" for v in sum_connected_APS[i:i+5])
-            print(f"  {row}")
-        # print(f"Volume fractions:          {v_APS}")
-        print(f"Connected (filtered):      {len(count_connected_filtered_APS)} / {len(count_connected_APS)}")
-        if count_connected_filtered_APS:
-            print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered_APS):.2f}")
-            print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered_APS):.2f}")
-            print(f"Max connected nodes:       {max(count_connected_filtered_APS)}")
-        else:
-            print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
+    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, save_indices=[0, 1, 2])
 
 # ============================================================
 # Histograms
@@ -164,6 +94,16 @@ if plot_histograms and RUN_TRANE and RUN_APS:
     max3 = max(max1, max2)
     plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3*1.05, 0.0, 100, 50)
     plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3*1.05, 0.0, 100, 50)
+
+
+
+
+
+
+
+
+
+
 
 # ============================================================
 # Old / alternative calls kept for reference

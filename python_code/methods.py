@@ -1,7 +1,9 @@
 from datetime import datetime
 import math
 import os
+import pickle
 import subprocess
+import statistics
 import sys
 
 import matplotlib.pyplot as plt
@@ -310,6 +312,56 @@ def _print_progress_bar(current, total, prefix="", bar_length=80):
     filled = int(bar_length * fraction)
     bar = f"{BLUE}{'█' * filled}{GREY}{'░' * (bar_length - filled)}{RESET}"
     print(f"\r{prefix}: {BLUE}|{RESET}{bar}{BLUE}|{RESET} {current}/{total} ({fraction:.0%})", end="", flush=True)
+
+
+def _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy):
+    RED   = "\033[31m"
+    RESET = "\033[0m"
+    print("=" * 50)
+    print("Results")
+    print("=" * 50)
+    print("Sum connected area:")
+    for i in range(0, len(sum_connected), 5):
+        row = ", ".join(f"{v:12.2f}" if v != -1 else f"{'—':>12}" for v in sum_connected[i:i+5])
+        print(f"  {row}")
+    print(f"#realizations with connection: {len(count_connected_filtered)} / {len(count_connected)}")
+    if count_connected_filtered:
+        print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered):.2f}")
+        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered):.2f}")
+        print(f"Max connected nodes:       {max(count_connected_filtered)}")
+    else:
+        print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
+
+
+def _print_header(title):
+    BRIGHT_RED = "\033[91m"
+    RESET      = "\033[0m"
+    print(f"\n{BRIGHT_RED}╔{'═' * 48}╗")
+    print(f"║{title:^48}║")
+    print(f"╚{'═' * 48}╝{RESET}")
+
+
+def _save(name, obj):
+    with open(name, "wb") as fp:
+        pickle.dump(obj, fp)
+
+
+def _load(path, name):
+    with open(os.path.join(path, name), "rb") as fp:
+        return pickle.load(fp)
+
+
+def _analyse(z, parameters, prefix, dx, dy, verbose, save_indices="all", save_thresholds=False):
+    save_facies_grids_as_png(z, parameters, prefix, save_indices)
+    calculate_and_save_facies_prob_maps(z, parameters, prefix)
+    if save_thresholds:
+        save_threshold_grids_as_png(parameters)
+    count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
+    sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
+    count_connected_filtered = [c for c in count_connected if c != -1]
+    if verbose:
+        _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
+    return count_connected_filtered
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all"):
