@@ -36,7 +36,7 @@ MODEL_CONFIGS = {
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
         ],
         # "trends": [("1", "1.282"), ("2", "0.0")],
-        "trends": [("1", "0.1"), ("2", "0.0")],
+        "trends": [("1", "0.5"), ("2", "0.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
@@ -405,7 +405,7 @@ def _load(path, name):
 
 
 def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir="."):
-    save_facies_grids_as_png(z, parameters, prefix, save_indices, output_dir=output_dir)
+    save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)
     calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
     if save_thresholds:
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
@@ -417,7 +417,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices=
     return count_connected_filtered
 
 
-def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="all", output_dir="."):
+def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir="."):
     F1 = (255/255,  69/255,   0/255)  # Orange-Red
     F2 = ( 75/255,   0/255, 130/255)  # Indigo
     F3 = (  0/255, 206/255, 209/255)  # Dark Turquoise
@@ -431,8 +431,8 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="
     x_max = dx * nx
     y_min = 0.0
     y_max = dy * ny
-    x = [3000.0, 3500.0]
-    y = [2000.0, 2000.0]
+    well_x = [WELL_DATA[wp]["x"] for wp in MODEL_CONFIGS[model_number]["wells"]]
+    well_y = [WELL_DATA[wp]["y"] for wp in MODEL_CONFIGS[model_number]["wells"]]
     extent = x_min, x_max, y_min, y_max
 
     folder = os.path.join(output_dir, "facies_grids_" + prefix)
@@ -457,7 +457,7 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, indices_to_save="
             fig.add_axes(ax)
             # img = plt.imshow(z_simbox, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
             img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
-            plt.scatter(x, y, facecolors='none', edgecolors='red', s = 150)
+            plt.scatter(well_x, well_y, facecolors='none', edgecolors='red', s = 150)
             plt.savefig(os.path.join(folder, prefix + '_it' + str(iteration) + '.png'), dpi=100)
             plt.close()
    
