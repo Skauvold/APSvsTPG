@@ -20,6 +20,7 @@ from variogram.simulate import simulate_gaussian_field
 
 MODEL_CONFIGS = {
     "0": {
+        "n_facies": 2,
         "facies_models": [
             {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
         ],
@@ -30,6 +31,7 @@ MODEL_CONFIGS = {
         "wells": ["wells/well2.rmswell"],
     },
     "1": {
+        "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
         ],
@@ -40,6 +42,7 @@ MODEL_CONFIGS = {
         "wells": ["wells/well2.rmswell"],
     },
     "2": {
+        "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
             {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
@@ -52,6 +55,7 @@ MODEL_CONFIGS = {
         "wells": ["wells/well2.rmswell"],
     },
     "3": {
+        "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
             {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
@@ -64,6 +68,7 @@ MODEL_CONFIGS = {
         "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
     },
     "4": {
+        "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
             {"parent": "F1F2", "names": "F1 F2", "residual_ids": "2", "trend_ids": "2"},
@@ -288,16 +293,20 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         v2_azimuth      = r2["azimuth"]  # Already 0.0, no conversion needed
         v2_genexp_power = r2["power"]
  
+    n_facies = MODEL_CONFIGS[model_number]["n_facies"]
     p_F1 = np.load(os.path.join(data_dir, "p1_from_TRANE.npy"))
-    p_F2 = np.load(os.path.join(data_dir, "p2_from_TRANE.npy"))
-    p_F3 = np.load(os.path.join(data_dir, "p3_from_TRANE.npy"))
+    if n_facies >= 3:
+        p_F2 = np.load(os.path.join(data_dir, "p2_from_TRANE.npy"))
+        p_F3 = np.load(os.path.join(data_dir, "p3_from_TRANE.npy"))
     
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
     t2 = np.zeros((nx, ny))
     for i in range(0, nx):
         for j in range(0, ny):
-            if model_number == "1":
+            if model_number == "0":
+                t1[i][j] = norm.ppf(p_F1[i][j])
+            elif model_number == "1":
                 t1[i][j] = norm.ppf(p_F1[i][j])
                 p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
                 t2[i][j] = norm.ppf(p1_p2)
@@ -319,7 +328,12 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         z = np.ndarray(s1.shape)
         for i in range(0, nx):
             for j in range(0, ny):
-                if model_number == "1":
+                if model_number == "0":
+                    if s1[i][j] < t1[i][j]:
+                        z[i][j] = 1
+                    else:
+                        z[i][j] = 2
+                elif model_number == "1":
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 1
                     elif s1[i][j] < t2[i][j]:
@@ -387,11 +401,11 @@ def _load(path, name):
         return pickle.load(fp)
 
 
-def _analyse(z, parameters, prefix, dx, dy, verbose, save_indices="all", save_thresholds=False, output_dir=".", data_dir="."):
+def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir="."):
     save_facies_grids_as_png(z, parameters, prefix, save_indices, output_dir=output_dir)
-    calculate_and_save_facies_prob_maps(z, parameters, prefix, output_dir=output_dir, data_dir=data_dir)
+    calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
     if save_thresholds:
-        save_threshold_grids_as_png(parameters, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
+        save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
     count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
     sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
     count_connected_filtered = [c for c in count_connected if c != -1]
@@ -497,7 +511,7 @@ def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observ
                 count_connected.append(-1)
     return count_connected
   
-def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, output_dir=".", data_dir="."):
+def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_number, output_dir=".", data_dir="."):
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
     dx = parameters[0]
@@ -513,22 +527,26 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, output
     y    = np.linspace(0.0, y_length, num=ny)
     # X, Y = np.meshgrid(x, y)
     X, Y = np.meshgrid(y, x)
+    n_facies = MODEL_CONFIGS[model_number]["n_facies"]
     p_F1 = (X ** 2 - Y ** 2) * 0.0
     p_F2 = (X ** 2 - Y ** 2) * 0.0
-    p_F3 = (X ** 2 - Y ** 2) * 0.0
+    p_F3 = (X ** 2 - Y ** 2) * 0.0 if n_facies >= 3 else None
     for iteration, z in enumerate(facies_grids):
         for i in range(0, nx):
             for j in range(0, ny):
                 a = 1 if z[i][j] == 1 else 0
                 b = 1 if z[i][j] == 2 else 0
-                c = 1 if z[i][j] == 3 else 0
                 p_F1[i][j]  = (p_F1[i][j]  * iteration + a) / (iteration + 1)
                 p_F2[i][j]  = (p_F2[i][j]  * iteration + b) / (iteration + 1)
-                p_F3[i][j]  = (p_F3[i][j]  * iteration + c) / (iteration + 1)
+                if n_facies >= 3:
+                    c = 1 if z[i][j] == 3 else 0
+                    p_F3[i][j]  = (p_F3[i][j]  * iteration + c) / (iteration + 1)
     np.save(os.path.join(data_dir, "p1_from_" + prefix), p_F1)
     np.save(os.path.join(data_dir, "p2_from_" + prefix), p_F2)
-    np.save(os.path.join(data_dir, "p3_from_" + prefix), p_F3)
-    for i, p in enumerate([p_F1, p_F2, p_F3]):
+    if n_facies >= 3:
+        np.save(os.path.join(data_dir, "p3_from_" + prefix), p_F3)
+    facies_probs = [p_F1, p_F2] if n_facies == 2 else [p_F1, p_F2, p_F3]
+    for i, p in enumerate(facies_probs):
         # To plot the ndarray correctly:
         x_lin = np.linspace(0.0, x_length, num=nx)
         y_lin = np.linspace(0.0, y_length, num=ny)
@@ -584,10 +602,10 @@ def calculate_volume_fractions(facies_grids):
         v[3].append(percent_dict[3])
     return v
 
-def save_threshold_grids_as_png(parameters, output_dir=".", data_dir=".", prefix="TRANE"):
+def save_threshold_grids_as_png(parameters, model_number, output_dir=".", data_dir=".", prefix="TRANE"):
+    n_facies = MODEL_CONFIGS[model_number]["n_facies"]
     p_F1 = np.load(os.path.join(data_dir, "p1_from_" + prefix + ".npy"))
-    p_F2 = np.load(os.path.join(data_dir, "p2_from_" + prefix + ".npy"))
-    p_F3 = np.load(os.path.join(data_dir, "p3_from_" + prefix + ".npy"))
+    p_F2 = np.load(os.path.join(data_dir, "p2_from_" + prefix + ".npy")) if n_facies >= 3 else None
 
     nx = p_F1.shape[0]
     ny = p_F1.shape[1]
@@ -603,14 +621,16 @@ def save_threshold_grids_as_png(parameters, output_dir=".", data_dir=".", prefix
 
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
-    t2 = np.zeros((nx, ny))
+    t2 = np.zeros((nx, ny)) if n_facies >= 3 else None
     for i in range(0, nx):
         for j in range(0, ny):
             t1[i][j] = norm.ppf(p_F1[i][j])
-            p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
-            t2[i][j] = norm.ppf(p1_p2)
+            if n_facies >= 3:
+                p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
+                t2[i][j] = norm.ppf(p1_p2)
     
-    for i, t in enumerate([t1, t2]):
+    thresholds = [t1] if n_facies == 2 else [t1, t2]
+    for i, t in enumerate(thresholds):
         # To plot the ndarray correctly:
         x_lin = np.linspace(0.0, x_length, num=nx)
         y_lin = np.linspace(0.0, y_length, num=ny)

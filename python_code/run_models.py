@@ -88,7 +88,7 @@ if RUN_TRANE:
     dx = parameters[0]
     dy = parameters[1]
 
-    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose,
+    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
         save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane)
 
 if RUN_APS:
@@ -111,7 +111,7 @@ if RUN_APS:
         _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
         z_APS = _load(_load_pickle_aps, "z_APS")
 
-    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose,
+    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
         save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps)
 
 # ============================================================
