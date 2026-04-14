@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODEL = "0F"
+MODEL = "0D"
 n_sim = 100
 use_existing_results = False
 
@@ -140,6 +140,7 @@ _all_well_counts = [c for _, counts in trane_well_data + aps_well_data for c in 
 _n_bins = max(10, n_sim // 25)
 if _all_well_counts:
     _xmax_well = max(_all_well_counts) * 1.1
+    _n_bins = min(_n_bins, int(max(_all_well_counts)) + 1)  # bin width must be >= 1 (counts are integers)
     _binwidth = _xmax_well / _n_bins
     _bin_edges = [i * _binwidth for i in range(_n_bins + 1)]
     _ymax_well = 0
@@ -162,9 +163,10 @@ if plot_histograms and RUN_TRANE and RUN_APS:
     all_connected = count_connected_filtered_TRANE + count_connected_filtered_APS
     if all_connected:
         max3 = max(all_connected) * 1.02
-        plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, n_sim, _n_bins,
+        _n_bins_tp = min(_n_bins, int(max(all_connected)) + 1)
+        plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, n_sim, _n_bins_tp,
             output_dir=path_output_trane)
-        plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, n_sim, _n_bins,
+        plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, n_sim, _n_bins_tp,
             output_dir=path_output_aps)
 
 
