@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import shutil
 import sys
 import time
 from datetime import datetime
@@ -12,20 +13,20 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODEL = "0D"
-n_sim = 100
+MODEL = "5A"
+n_sim = 1
 use_existing_results = False
 
 RUN_TRANE = True
 RUN_APS = True
 verbose = True
-verbose_trane = False
+verbose_trane = True
 plot_histograms = True
 n_workers = 14  # parallel workers for TRANE and APS simulations
 max_facies_grid_exports = 200  # max facies grid images saved per method (None = all)
 
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
-path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
+temp_project_dir = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
 _path_results_base = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results"
 path_trane_results_to_load = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\python_code\\results_old"
 path_trane_exe = "%tra%"
@@ -66,7 +67,7 @@ with open(os.path.join(path_trane_results_to_save, "run_log.txt"), 'w') as _f:
     _f.write(f"verbose_trane:        {verbose_trane}\n")
     _f.write(f"plot_histograms:      {plot_histograms}\n")
     _f.write("\n")
-    _f.write(f"path_trane_models:    {path_trane_models}\n")
+    _f.write(f"temp_project_dir:     {temp_project_dir}\n")
     _f.write(f"path_trane_exe:       {path_trane_exe}\n")
     _f.write(f"Results saved to:     {path_trane_results_to_save}\n")
     if use_existing_results:
@@ -74,6 +75,11 @@ with open(os.path.join(path_trane_results_to_save, "run_log.txt"), 'w') as _f:
 
 trane_well_data = []
 aps_well_data = []
+
+# Clear TRANE_models_autocreated before running
+if False and not use_existing_results and os.path.exists(temp_project_dir):
+    shutil.rmtree(temp_project_dir)
+os.makedirs(temp_project_dir, exist_ok=True)
 
 if RUN_TRANE:
     resolved_trane_exe = os.path.expandvars(path_trane_exe)
@@ -84,7 +90,7 @@ if RUN_TRANE:
     _print_header('TRANE simulations')
     if not use_existing_results:
         _t0 = time.time()
-        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane, n_workers)
+        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, temp_project_dir, path_trane_exe, True, verbose_trane, n_workers)
         print(f"\033[36m  [timing] {'run_TRANE_simulations:':<42} {time.time()-_t0:6.2f}s\033[0m")
         _t0 = time.time()
         _save(os.path.join(path_pickle_trane, "z_TRANE"), z_TRANE)

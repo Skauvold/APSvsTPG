@@ -215,6 +215,31 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
     },
+    # ── Model 5: 8-facies, single Gaussian field, equal prior probability ──
+    # Thresholds split standard normal into 8 equal intervals (each p=0.125).
+    # norm.ppf(k/8) for k=1..7: -1.1503, -0.6745, -0.3186, 0.0, 0.3186, 0.6745, 1.1503
+    "5A": {
+        "n_facies": 8,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3 F4 F5 F6 F7 F8",
+             "residual_ids": "1  1  1  1  1  1  1",
+             "trend_ids":    "1  2  3  4  5  6  7"},
+        ],
+        # 7 trends that place equal-probability thresholds at norm.ppf(k/8) for k=1..7
+        "trends": [
+            ("1", "1.1503"),
+            ("2", "0.6745"),
+            ("3", "0.3186"),
+            ("4",  "0.0000"),
+            ("5",  "-0.3186"),
+            ("6",  "-0.6745"),
+            ("7",  "-1.1503"),
+        ],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well6.rmswell"],
+    },
 }
 
 GRID_NX = 151
@@ -297,18 +322,21 @@ WELL_DATA = {
     "wells/well4_47.rmswell": {"name": "well4_47", "x": 4500.0, "y": 3500.0, "facies": 2},
     "wells/well4_48.rmswell": {"name": "well4_48", "x": 5100.0, "y": 3500.0, "facies": 2},
     "wells/well4_49.rmswell": {"name": "well4_49", "x": 5700.0, "y": 3500.0, "facies": 1},
+    # ── Model 5A: 10-facies, single well, F8 observation ─────────────────
+    "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 8},
 }
 
 
-def _build_well_file(well_name, x, y, facies_code):
+def _build_well_file(well_name, x, y, facies_code, n_facies=3):
     z_values = [i * 2.0 for i in range(int(Z_LENGTH / 2))]
     data_lines = [f"{x}   {y}   {z:6.1f}    {facies_code}" for z in z_values]
+    facies_disc = " ".join(f"{i} F{i}" for i in range(1, n_facies + 1))
     return "\n".join([
         "1.0",
         "UNDEFINED",
         f"{well_name} {x} {y} 0.0",
         "1",
-        "FACIES DISC 1 F1 2 F2 3 F3",
+        f"FACIES DISC {facies_disc}",
     ] + data_lines) + "\n"
 
 
@@ -458,7 +486,7 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         wd = WELL_DATA[well_path]
         well_file_path = os.path.join(path_trane_models, "input", well_path)
         with open(well_file_path, 'w') as f:
-            f.write(_build_well_file(wd["name"], wd["x"], wd["y"], wd["facies"]))
+            f.write(_build_well_file(wd["name"], wd["x"], wd["y"], wd["facies"], n_facies=cfg["n_facies"]))
 
     out_z = [None] * n_simulations
     completed = [0]
@@ -486,7 +514,7 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         print()
     return out_z, parameters
 
-def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family):
+def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family, thresholds=None):
     s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed=iteration)
     s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed=iteration) if v2 is not None else None
     z = np.ndarray(s1.shape)
@@ -501,6 +529,15 @@ def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family):
                     z[i][j] = 2
                 else:
                     z[i][j] = 3
+            elif model_family == "5":
+                # thresholds is a list of n_facies-1 arrays, each (nx, ny)
+                val = s1[i][j]
+                assigned = len(thresholds) + 1  # default: last facies
+                for k, tk in enumerate(thresholds):
+                    if val < tk[i][j]:
+                        assigned = k + 1
+                        break
+                z[i][j] = assigned
             else:
                 if s1[i][j] < t1[i][j]:
                     z[i][j] = 3
@@ -533,10 +570,13 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     if n_facies >= 3:
         p_F2 = np.load(os.path.join(data_dir, "p2_from_TRANE.npy"))
         p_F3 = np.load(os.path.join(data_dir, "p3_from_TRANE.npy"))
+    if n_facies > 3:
+        p_all = [np.load(os.path.join(data_dir, f"p{k}_from_TRANE.npy")) for k in range(1, n_facies + 1)]
 
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
     t2 = np.zeros((nx, ny))
+    thresholds_5 = None  # list of (n_facies-1) threshold arrays for model family "5"
     for i in range(0, nx):
         for j in range(0, ny):
             if model_number[0] == "0":
@@ -548,6 +588,12 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
             elif model_number[0] in ("2", "3", "4"):
                 t1[i][j] = norm.ppf(p_F3[i][j])
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
+    if model_number[0] == "5":
+        # Build n_facies-1 cumulative threshold arrays from cumulative probabilities
+        thresholds_5 = []
+        for k in range(1, n_facies):  # k = 1 .. n_facies-1
+            cum_p = np.clip(sum(p_all[:k]), 0.0, 1.0 - 1e-9)
+            thresholds_5.append(norm.ppf(cum_p))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
     v2 = None
@@ -561,7 +607,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
 
     with ThreadPoolExecutor(max_workers=n_workers) as executor:
         futures = {
-            executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0]): i
+            executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0], thresholds_5): i
             for i in range(n_simulations)
         }
         for future in as_completed(futures):
@@ -708,9 +754,20 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir="."):
-    F1 = (255/255,  69/255,   0/255)  # Orange-Red
-    F2 = ( 75/255,   0/255, 130/255)  # Indigo
-    F3 = (  0/255, 206/255, 209/255)  # Dark Turquoise
+    _FACIES_COLORS = [
+        (255/255,  69/255,   0/255),   # F1  Orange-Red
+        ( 75/255,   0/255, 130/255),   # F2  Indigo
+        (  0/255, 206/255, 209/255),   # F3  Dark Turquoise
+        ( 34/255, 139/255,  34/255),   # F4  Forest Green
+        (255/255, 215/255,   0/255),   # F5  Gold
+        (220/255,  20/255,  60/255),   # F6  Crimson
+        (  0/255, 191/255, 255/255),   # F7  Deep Sky Blue
+        (148/255,   0/255, 211/255),   # F8  Dark Violet
+        (255/255, 140/255,   0/255),   # F9  Dark Orange
+        ( 64/255, 224/255, 208/255),   # F10 Turquoise
+    ]
+    n_facies = MODEL_CONFIGS[model_number]["n_facies"]
+    cmap = colors.ListedColormap(_FACIES_COLORS[:n_facies])
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
     dx = parameters[0]
@@ -739,7 +796,7 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
                 for j in range(0, ny):
                     z_for_plotting[j][i] = z[i][ny - 1 - j]
 
-            cmap = colors.ListedColormap([F1, F2, F3])
+            cmap = colors.ListedColormap(_FACIES_COLORS[:n_facies])
             fig = plt.figure(frameon=False)
             fig.set_size_inches(9,6)
             ax = plt.Axes(fig, [0., 0., 1., 1.])
@@ -855,7 +912,12 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
     np.save(os.path.join(data_dir, "p2_from_" + prefix), p_F2)
     if n_facies >= 3:
         np.save(os.path.join(data_dir, "p3_from_" + prefix), p_F3)
-    facies_probs = [p_F1, p_F2] if n_facies == 2 else [p_F1, p_F2, p_F3]
+    if n_facies > 3:
+        for k in range(4, n_facies + 1):
+            pk = np.mean(z_stack == k, axis=0)
+            np.save(os.path.join(data_dir, f"p{k}_from_" + prefix), pk)
+
+    facies_probs = [np.mean(z_stack == k, axis=0) for k in range(1, n_facies + 1)]
     for i, p in enumerate(facies_probs):
         p_for_plotting = np.flipud(p.T)
 
@@ -908,11 +970,10 @@ def calculate_volume_fractions(facies_grids):
 
 def save_threshold_grids_as_png(parameters, model_number, output_dir=".", data_dir=".", prefix="TRANE"):
     n_facies = MODEL_CONFIGS[model_number]["n_facies"]
-    p_F1 = np.load(os.path.join(data_dir, "p1_from_" + prefix + ".npy"))
-    p_F2 = np.load(os.path.join(data_dir, "p2_from_" + prefix + ".npy")) if n_facies >= 3 else None
+    p_all = [np.load(os.path.join(data_dir, f"p{k}_from_" + prefix + ".npy")) for k in range(1, n_facies + 1)]
 
-    nx = p_F1.shape[0]
-    ny = p_F1.shape[1]
+    nx = p_all[0].shape[0]
+    ny = p_all[0].shape[1]
     dx = parameters[0]
     dy = parameters[1]
     x_length = parameters[2]
@@ -923,17 +984,29 @@ def save_threshold_grids_as_png(parameters, model_number, output_dir=".", data_d
     y_max = dy * ny
     extent = x_min, x_max, y_min, y_max
 
-    # Calculate thresholds
-    t1 = np.zeros((nx, ny))
-    t2 = np.zeros((nx, ny)) if n_facies >= 3 else None
-    for i in range(0, nx):
-        for j in range(0, ny):
-            t1[i][j] = norm.ppf(p_F1[i][j])
-            if n_facies >= 3:
-                p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
+    # Build n_facies-1 cumulative threshold arrays
+    thresholds = []
+    if n_facies == 2:
+        t1 = np.zeros((nx, ny))
+        for i in range(nx):
+            for j in range(ny):
+                t1[i][j] = norm.ppf(np.clip(p_all[0][i][j], 1e-9, 1.0 - 1e-9))
+        thresholds = [t1]
+    elif n_facies == 3:
+        t1 = np.zeros((nx, ny))
+        t2 = np.zeros((nx, ny))
+        for i in range(nx):
+            for j in range(ny):
+                t1[i][j] = norm.ppf(np.clip(p_all[0][i][j], 1e-9, 1.0 - 1e-9))
+                p1_p2 = min(1.0 - 1e-9, p_all[0][i][j] + p_all[1][i][j])
                 t2[i][j] = norm.ppf(p1_p2)
-    
-    thresholds = [t1] if n_facies == 2 else [t1, t2]
+        thresholds = [t1, t2]
+    else:
+        # General case: n_facies-1 cumulative thresholds
+        for k in range(1, n_facies):
+            cum_p = np.clip(sum(p_all[:k]), 0.0, 1.0 - 1e-9)
+            thresholds.append(norm.ppf(cum_p))
+
     for i, t in enumerate(thresholds):
         # To plot the ndarray correctly:
         x_lin = np.linspace(0.0, x_length, num=nx)
