@@ -8,6 +8,7 @@ import sys
 
 import matplotlib.pyplot as plt
 from matplotlib import colors, patches
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 from scipy.stats import norm
 
@@ -307,7 +308,40 @@ def _build_model_xml(model_number, seed, output_dir):
     return "\n".join(lines) + "\n"
 
 
-def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False, verbose_trane=False):
+def _run_trane_single(iteration, model_number, path_trane_models, path_trane_exe, verbose_trane):
+    output_dir            = f"output{model_number}_edited_{iteration}"
+    modelfile_edited_path = os.path.join(path_trane_models, f"model{model_number}_edited_{iteration}.xml")
+    results_path          = os.path.join(path_trane_models, output_dir, "result.roff")
+    with open(modelfile_edited_path, 'w') as f:
+        f.write(_build_model_xml(model_number, seed=iteration, output_dir=output_dir))
+    trane_output = None if verbose_trane else subprocess.DEVNULL
+    result = subprocess.run([path_trane_exe, modelfile_edited_path], shell=True, stdout=trane_output, stderr=trane_output)
+    if result.returncode != 0:
+        raise RuntimeError(f"TRANE failed on iteration {iteration} with return code {result.returncode}")
+    with open(results_path) as f:
+        lines = f.readlines()
+    nx   = int(lines[13].split()[2])
+    ny   = int(lines[14].split()[2])
+    nz   = int(lines[15].split()[2])
+    data = lines[20].split()
+    x_lin = np.linspace(0.0, X_LENGTH, num=nx)
+    y_lin = np.linspace(0.0, Y_LENGTH, num=ny)
+    X2, Y2 = np.meshgrid(y_lin, x_lin)
+    z = X2 ** 2 - Y2 ** 2
+    temp = np.zeros((nx, ny, nz))
+    counter = 0
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                temp[i][j][k] = data[counter]
+                counter += 1
+    for i in range(nx):
+        for j in range(ny):
+            z[i][j] = temp[i][j][nz - 1]
+    return iteration, z
+
+
+def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_trane_exe, print_info=False, verbose_trane=False, n_workers=4):
     os.chdir(path_trane_models)
     dx = X_LENGTH / GRID_NX
     dy = Y_LENGTH / GRID_NY
@@ -321,61 +355,58 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         with open(well_file_path, 'w') as f:
             f.write(_build_well_file(wd["name"], wd["x"], wd["y"], wd["facies"]))
 
-    out_z = []
-    for iteration in range(0, n_simulations):
-        if print_info:
-            _print_progress_bar(iteration, n_simulations, prefix="Progress")
-        output_dir            = "output" + model_number + "_edited"
-        modelfile_edited_path = os.path.join(path_trane_models, "model" + model_number + "_edited.xml")
-        output_path           = os.path.join(path_trane_models, output_dir)
-        results_path          = os.path.join(output_path, "result.roff")
-        with open(modelfile_edited_path, 'w') as f:
-            f.write(_build_model_xml(model_number, seed=iteration, output_dir=output_dir))
+    out_z = [None] * n_simulations
+    completed = [0]
+    if print_info:
+        _print_progress_bar(0, n_simulations, prefix="Progress")
 
-        trane_output = None if verbose_trane else subprocess.DEVNULL
-        result = subprocess.run([path_trane_exe, modelfile_edited_path], shell=True, stdout=trane_output, stderr=trane_output)
-        if result.returncode != 0:
-            print(f"\033[31m\nERROR: TRANE failed on iteration {iteration} with return code {result.returncode}\033[0m")
-            sys.exit(1)
-
-        lines = []
-        with open(results_path) as f:
-            lines = f.readlines()
-
-        nx   = int(lines[13].split()[2])
-        ny   = int(lines[14].split()[2])
-        nz   = int(lines[15].split()[2])
-        data = lines[20].split()
-
-        x_lin = np.linspace(0.0, X_LENGTH, num=nx)
-        y_lin = np.linspace(0.0, Y_LENGTH, num=ny)
-        X2, Y2 = np.meshgrid(y_lin, x_lin)
-        z = X2 ** 2 - Y2 ** 2
-
-        temp = np.zeros((nx, ny, nz))
-        counter = 0
-        for i in range(0, nx):
-            for j in range(0, ny):
-                for k in range(0, nz):
-                    temp[i][j][k] = data[counter]
-                    counter += 1
-        for i in range(0, nx):
-            for j in range(0, ny):
-                z[i][j] = temp[i][j][nz - 1]
-                # Backup:
-                # for k in range(0, nz):
-                #     if k == 0:
-                #         z[i][j] = temp[i][j][nz-k-1]
-
-        out_z.append(z)
+    with ThreadPoolExecutor(max_workers=n_workers) as executor:
+        futures = {
+            executor.submit(_run_trane_single, i, model_number, path_trane_models, path_trane_exe, verbose_trane): i
+            for i in range(n_simulations)
+        }
+        for future in as_completed(futures):
+            try:
+                iteration, z = future.result()
+            except RuntimeError as e:
+                print(f"\033[31m\nERROR: {e}\033[0m")
+                sys.exit(1)
+            out_z[iteration] = z
+            completed[0] += 1
+            if print_info:
+                _print_progress_bar(completed[0], n_simulations, prefix="Progress")
 
     parameters = [dx, dy, X_LENGTH, Y_LENGTH]
     if print_info:
-        _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
         print()
     return out_z, parameters
 
-def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False, data_dir="."):
+def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family):
+    s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed=iteration)
+    s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed=iteration) if v2 is not None else None
+    z = np.ndarray(s1.shape)
+    for i in range(nx):
+        for j in range(ny):
+            if model_family == "0":
+                z[i][j] = 1 if s1[i][j] < t1[i][j] else 2
+            elif model_family == "1":
+                if s1[i][j] < t1[i][j]:
+                    z[i][j] = 1
+                elif s1[i][j] < t2[i][j]:
+                    z[i][j] = 2
+                else:
+                    z[i][j] = 3
+            else:
+                if s1[i][j] < t1[i][j]:
+                    z[i][j] = 3
+                elif s2[i][j] < t2[i][j]:
+                    z[i][j] = 1
+                else:
+                    z[i][j] = 2
+    return iteration, z
+
+
+def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False, data_dir=".", n_workers=4):
     cfg = MODEL_CONFIGS[model_number]
     r1 = cfg["residuals"][0]
     v1_range_x      = r1["range"]
@@ -391,13 +422,13 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         v2_range_z      = Z_LENGTH
         v2_azimuth      = r2["azimuth"]  # Already 0.0, no conversion needed
         v2_genexp_power = r2["power"]
- 
+
     n_facies = MODEL_CONFIGS[model_number]["n_facies"]
     p_F1 = np.load(os.path.join(data_dir, "p1_from_TRANE.npy"))
     if n_facies >= 3:
         p_F2 = np.load(os.path.join(data_dir, "p2_from_TRANE.npy"))
         p_F3 = np.load(os.path.join(data_dir, "p3_from_TRANE.npy"))
-    
+
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
     t2 = np.zeros((nx, ny))
@@ -414,41 +445,28 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
+    v2 = None
     if model_number[0] in ("2", "3", "4"):
         v2 = GeneralExponentialVariogram(v2_range_x, v2_range_y, v2_range_z, azi=v2_azimuth, power=v2_genexp_power)
 
-    out_z = []
-    for iteration in range(0, n_simulations):
-        if print_info:
-            _print_progress_bar(iteration, n_simulations, prefix="Progress")
-        s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed = iteration)
-        if model_number[0] in ("2", "3", "4"):
-            s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed = iteration)
-        z = np.ndarray(s1.shape)
-        for i in range(0, nx):
-            for j in range(0, ny):
-                if model_number[0] == "0":
-                    if s1[i][j] < t1[i][j]:
-                        z[i][j] = 1
-                    else:
-                        z[i][j] = 2
-                elif model_number[0] == "1":
-                    if s1[i][j] < t1[i][j]:
-                        z[i][j] = 1
-                    elif s1[i][j] < t2[i][j]:
-                        z[i][j] = 2
-                    else:
-                        z[i][j] = 3
-                elif model_number[0] in ("2", "3", "4"):
-                    if s1[i][j] < t1[i][j]:
-                        z[i][j] = 3
-                    elif s2[i][j] < t2[i][j]:
-                        z[i][j] = 1
-                    else:
-                        z[i][j] = 2
-        out_z.append(z)
+    out_z = [None] * n_simulations
+    completed = [0]
     if print_info:
-        _print_progress_bar(n_simulations, n_simulations, prefix="Progress")
+        _print_progress_bar(0, n_simulations, prefix="Progress")
+
+    with ThreadPoolExecutor(max_workers=n_workers) as executor:
+        futures = {
+            executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0]): i
+            for i in range(n_simulations)
+        }
+        for future in as_completed(futures):
+            iteration, z = future.result()
+            out_z[iteration] = z
+            completed[0] += 1
+            if print_info:
+                _print_progress_bar(completed[0], n_simulations, prefix="Progress")
+
+    if print_info:
         print()
     return out_z
 

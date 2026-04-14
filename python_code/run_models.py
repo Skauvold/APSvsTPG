@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "0D"
-n_sim = 10
+n_sim = 5000
 use_existing_results = False
 
 RUN_TRANE = True
@@ -20,6 +20,7 @@ RUN_APS = True
 verbose = True
 verbose_trane = False
 plot_histograms = True
+n_workers = 10  # parallel workers for TRANE and APS simulations
 
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
@@ -80,7 +81,7 @@ if RUN_TRANE:
 
     _print_header('TRANE simulations')
     if not use_existing_results:
-        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane)
+        z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane, n_workers)
         _save(os.path.join(path_pickle_trane, "z_TRANE"), z_TRANE)
         _save(os.path.join(path_pickle_trane, "parameters"), parameters)
     else:
@@ -109,7 +110,7 @@ if RUN_APS:
 
     if not use_existing_results:
         _aps_data_dir = path_pickle_trane if RUN_TRANE else os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
-        z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True, data_dir=_aps_data_dir)
+        z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True, data_dir=_aps_data_dir, n_workers=n_workers)
         _save(os.path.join(path_pickle_aps, "z_APS"), z_APS)
     else:
         _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
