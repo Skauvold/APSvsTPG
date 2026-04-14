@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "0D"
-n_sim = 5000
+n_sim = 500
 use_existing_results = False
 
 RUN_TRANE = True
