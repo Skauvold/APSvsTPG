@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "1"
-n_sim = 10
+n_sim = 5
 use_existing_results = False
 
 RUN_TRANE = True
@@ -48,6 +48,7 @@ path_pickle_trane = os.path.join(path_output_trane, "pickle_backup")
 path_pickle_aps   = os.path.join(path_output_aps,   "pickle_backup")
 os.makedirs(path_pickle_trane)
 os.makedirs(path_pickle_aps)
+_log_file = os.path.join(path_trane_results_to_save, "run_log.txt")
 
 with open(os.path.join(path_trane_results_to_save, "run_log.txt"), 'w') as _f:
     _f.write("Run log\n")
@@ -89,7 +90,7 @@ if RUN_TRANE:
     dy = parameters[1]
 
     count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
-        save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane)
+        save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
 
 if RUN_APS:
     _print_header('APS simulations')
@@ -112,7 +113,7 @@ if RUN_APS:
         z_APS = _load(_load_pickle_aps, "z_APS")
 
     count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
-        save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps)
+        save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
 
 # ============================================================
 # Histograms

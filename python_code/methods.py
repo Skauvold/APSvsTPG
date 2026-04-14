@@ -7,7 +7,7 @@ import statistics
 import sys
 
 import matplotlib.pyplot as plt
-from matplotlib import colors
+from matplotlib import colors, patches
 import numpy as np
 from scipy.stats import norm
 
@@ -27,6 +27,8 @@ MODEL_CONFIGS = {
         "trends": [("1", "0.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
+            # {"id": "1", "type": "genexp", "range": 50.0, "subrange": 50.0, "power": 1.5, "azimuth": 0.0},
+            # {"id": "1", "type": "genexp", "range": 5000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 0.0},
         ],
         "wells": ["wells/well2.rmswell"],
     },
@@ -36,12 +38,16 @@ MODEL_CONFIGS = {
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
         ],
         # "trends": [("1", "1.282"), ("2", "0.0")],
-        "trends": [("1", "0.5"), ("2", "0.0")],
+        # "trends": [("1", "0.5"), ("2", "0.0")],
+        "trends": [("1", "1.0"), ("2", "0.0")],
+        # "trends": [("1", "2.0"), ("2", "-2.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
         # "wells": ["wells/well2.rmswell"],
-        "wells": ["wells/well2B.rmswell"],
+        # "wells": ["wells/well2B.rmswell"],
+        # "wells": ["wells/well2B.rmswell", "wells/well2C.rmswell", "wells/well2D.rmswell", "wells/well2E.rmswell", "wells/well2F.rmswell", "wells/well2G.rmswell", "wells/well2H.rmswell", "wells/well2I.rmswell", "wells/well2J.rmswell", "wells/well2K.rmswell", "wells/well2L.rmswell", "wells/well2M.rmswell", "wells/well2N.rmswell", "wells/well2O.rmswell", "wells/well2P.rmswell", "wells/well2Q.rmswell"],
+        "wells": ["wells/well2B.rmswell", "wells/well2C.rmswell", "wells/well2D.rmswell", "wells/well2E.rmswell", "wells/well2F.rmswell", "wells/well2G.rmswell", "wells/well2H.rmswell", "wells/well2I.rmswell", "wells/well2J.rmswell", "wells/well2K.rmswell", "wells/well2L.rmswell", "wells/well2M.rmswell", "wells/well2N.rmswell", "wells/well2O.rmswell", "wells/well2P.rmswell", "wells/well2Q.rmswell"],
     },
     "2": {
         "n_facies": 3,
@@ -94,6 +100,21 @@ Z_LENGTH = 20.0
 WELL_DATA = {
     "wells/well2.rmswell": {"name": "well2", "x": 3000.0, "y": 2000.0, "facies": 1},
     "wells/well2B.rmswell": {"name": "well2B", "x": 3000.0, "y": 2000.0, "facies": 2},
+    "wells/well2C.rmswell": {"name": "well2C", "x": 3040.0, "y": 2000.0, "facies": 2},
+    "wells/well2D.rmswell": {"name": "well2D", "x": 3080.0, "y": 2000.0, "facies": 2},
+    "wells/well2E.rmswell": {"name": "well2E", "x": 3120.0, "y": 2000.0, "facies": 2},
+    "wells/well2F.rmswell": {"name": "well2F", "x": 3160.0, "y": 2000.0, "facies": 2},
+    "wells/well2G.rmswell": {"name": "well2G", "x": 3200.0, "y": 2000.0, "facies": 2},
+    "wells/well2H.rmswell": {"name": "well2H", "x": 3240.0, "y": 2000.0, "facies": 2},
+    "wells/well2I.rmswell": {"name": "well2I", "x": 3280.0, "y": 2000.0, "facies": 3},
+    "wells/well2J.rmswell": {"name": "well2J", "x": 3320.0, "y": 2000.0, "facies": 3},
+    "wells/well2K.rmswell": {"name": "well2K", "x": 3360.0, "y": 2000.0, "facies": 3},
+    "wells/well2L.rmswell": {"name": "well2L", "x": 3400.0, "y": 2000.0, "facies": 3},
+    "wells/well2M.rmswell": {"name": "well2M", "x": 3440.0, "y": 2000.0, "facies": 3},
+    "wells/well2N.rmswell": {"name": "well2N", "x": 3480.0, "y": 2000.0, "facies": 3},
+    "wells/well2O.rmswell": {"name": "well2O", "x": 3520.0, "y": 2000.0, "facies": 3},
+    "wells/well2P.rmswell": {"name": "well2P", "x": 3560.0, "y": 2000.0, "facies": 3},
+    "wells/well2Q.rmswell": {"name": "well2Q", "x": 3600.0, "y": 2000.0, "facies": 3},
     "wells/well3.rmswell": {"name": "well3", "x": 3500.0, "y": 2000.0, "facies": 1},
 }
 
@@ -394,6 +415,16 @@ def _print_header(title):
     print(f"╚{'═' * 48}╝{RESET}")
 
 
+def _cluster_size_stats_lines(counts, well_name, prefix):
+    n = len(counts)
+    lines = [f"Cluster size stats for {prefix}_{well_name} (n={n}):"]
+    for size in range(1, 11):
+        c = sum(1 for v in counts if v == size)
+        pct = 100.0 * c / n if n > 0 else 0.0
+        lines.append(f"  Size {size:2d}: {c:5d} / {n}  ({pct:5.1f}%)")
+    return lines
+
+
 def _save(name, obj):
     with open(name, "wb") as fp:
         pickle.dump(obj, fp)
@@ -404,7 +435,7 @@ def _load(path, name):
         return pickle.load(fp)
 
 
-def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir="."):
+def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir=".", log_file=None):
     save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)
     calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
     if save_thresholds:
@@ -414,6 +445,23 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices=
     count_connected_filtered = [c for c in count_connected if c != -1]
     if verbose:
         _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
+    for wp in MODEL_CONFIGS[model_number]["wells"]:
+        wd = WELL_DATA[wp]
+        per_well_counts = count_connected_nodes_from_point(z, parameters, wd["x"], wd["y"])
+        xmax = max(per_well_counts) * 1.1
+        plot_histogram_of_connected_cells(
+            per_well_counts, prefix + "_" + wd["name"],
+            0.0, xmax, 0.0, len(z), 50, output_dir=output_dir
+        )
+        stat_lines = _cluster_size_stats_lines(per_well_counts, wd["name"], prefix)
+        if verbose:
+            print()
+            for line in stat_lines:
+                print(line)
+        if log_file:
+            with open(log_file, 'a') as _lf:
+                _lf.write("\n")
+                _lf.write("\n".join(stat_lines) + "\n")
     return count_connected_filtered
 
 
@@ -451,13 +499,17 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
 
             cmap = colors.ListedColormap([F1, F2, F3])
             fig = plt.figure(frameon=False)
-            fig.set_size_inches(6,4)
+            fig.set_size_inches(9,6)
             ax = plt.Axes(fig, [0., 0., 1., 1.])
             ax.set_axis_off()
             fig.add_axes(ax)
             # img = plt.imshow(z_simbox, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
             img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
-            plt.scatter(well_x, well_y, facecolors='none', edgecolors='red', s = 150)
+            for wx, wy in zip(well_x, well_y):
+                ax.add_patch(patches.Rectangle(
+                    (wx - dx/2, wy - dy/2), dx, dy,
+                    linewidth=0.5, edgecolor='black', facecolor='none'
+                ))
             plt.savefig(os.path.join(folder, prefix + '_it' + str(iteration) + '.png'), dpi=100)
             plt.close()
    
@@ -512,7 +564,31 @@ def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observ
             else:
                 count_connected.append(-1)
     return count_connected
-  
+
+
+def count_connected_nodes_from_point(facies_grids, parameters, x_obs, y_obs):
+    nx = facies_grids[0].shape[0]
+    ny = facies_grids[0].shape[1]
+    dx = parameters[0]
+    dy = parameters[1]
+    x_ind = math.floor(x_obs / dx)
+    y_ind = math.floor(y_obs / dy)
+    counts = []
+    for z in facies_grids:
+        connected = np.zeros((nx, ny), dtype=bool)
+        connected[x_ind][y_ind] = True
+        need_to_check = [[x_ind, y_ind]]
+        facies = z[x_ind][y_ind]
+        while need_to_check:
+            xi, yi = need_to_check.pop(0)
+            for xn, yn in [(xi+1,yi),(xi-1,yi),(xi,yi+1),(xi,yi-1)]:
+                if 0 <= xn < nx and 0 <= yn < ny and z[xn][yn] == facies and not connected[xn][yn]:
+                    connected[xn][yn] = True
+                    need_to_check.append([xn, yn])
+        counts.append(int(np.count_nonzero(connected)))
+    return counts
+
+
 def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_number, output_dir=".", data_dir="."):
     nx = facies_grids[0].shape[0]
     ny = facies_grids[0].shape[1]
