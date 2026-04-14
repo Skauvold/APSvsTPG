@@ -19,7 +19,8 @@ from variogram.simulate import simulate_gaussian_field
 
 
 MODEL_CONFIGS = {
-    "0": {
+    # ── Model 0: 2-facies (F1 F2), no trend, varying residual range ─────
+    "0A": {
         "n_facies": 2,
         "facies_models": [
             {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
@@ -27,29 +28,100 @@ MODEL_CONFIGS = {
         "trends": [("1", "0.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
-            # {"id": "1", "type": "genexp", "range": 50.0, "subrange": 50.0, "power": 1.5, "azimuth": 0.0},
-            # {"id": "1", "type": "genexp", "range": 5000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 0.0},
         ],
         "wells": ["wells/well2.rmswell"],
     },
-    "1": {
+    "0B": {
+        "n_facies": 2,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
+        ],
+        "trends": [("1", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 50.0, "subrange": 50.0, "power": 1.5, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell"],
+    },
+    "0C": {
+        "n_facies": 2,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
+        ],
+        "trends": [("1", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 5000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well2.rmswell"],
+    },
+    "0D": {
+        "n_facies": 2,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2", "residual_ids": "1", "trend_ids": "1"},
+        ],
+        "trends": [("1", "-2.5")],  # => Mostly F1
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well1.rmswell"],
+    },
+    # ── Model 1: 3-facies (F1 F2 F3), varying trends and wells ──────────
+    "1A": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
         ],
-        # "trends": [("1", "1.282"), ("2", "0.0")],
-        # "trends": [("1", "0.5"), ("2", "0.0")],
-        "trends": [("1", "1.0"), ("2", "0.0")],
-        # "trends": [("1", "2.0"), ("2", "-2.0")],
+        "trends": [("1", "1.282"), ("2", "0.0")],
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        # "wells": ["wells/well2.rmswell"],
-        # "wells": ["wells/well2B.rmswell"],
-        # "wells": ["wells/well2B.rmswell", "wells/well2C.rmswell", "wells/well2D.rmswell", "wells/well2E.rmswell", "wells/well2F.rmswell", "wells/well2G.rmswell", "wells/well2H.rmswell", "wells/well2I.rmswell", "wells/well2J.rmswell", "wells/well2K.rmswell", "wells/well2L.rmswell", "wells/well2M.rmswell", "wells/well2N.rmswell", "wells/well2O.rmswell", "wells/well2P.rmswell", "wells/well2Q.rmswell"],
+        "wells": ["wells/well2.rmswell"],
+    },
+    "1B": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.5"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1C": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.5"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
         "wells": ["wells/well2B.rmswell", "wells/well2C.rmswell", "wells/well2D.rmswell", "wells/well2E.rmswell", "wells/well2F.rmswell", "wells/well2G.rmswell", "wells/well2H.rmswell", "wells/well2I.rmswell", "wells/well2J.rmswell", "wells/well2K.rmswell", "wells/well2L.rmswell", "wells/well2M.rmswell", "wells/well2N.rmswell", "wells/well2O.rmswell", "wells/well2P.rmswell", "wells/well2Q.rmswell"],
     },
-    "2": {
+    "1D": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "1.0"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1E": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "2.0"), ("2", "-2.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
+    "2A": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
@@ -62,7 +134,8 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2.rmswell"],
     },
-    "3": {
+    # ── Model 3: same as 2A but with 2 wells ─────────────────────────────
+    "3A": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
@@ -75,7 +148,8 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
     },
-    "4": {
+    # ── Model 4: same as 3A but larger variogram ranges ──────────────────
+    "4A": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
@@ -98,6 +172,7 @@ Y_LENGTH = 4000.0
 Z_LENGTH = 20.0
 
 WELL_DATA = {
+    "wells/well1.rmswell": {"name": "well1", "x": 3000.0, "y": 2000.0, "facies": 2},
     "wells/well2.rmswell": {"name": "well2", "x": 3000.0, "y": 2000.0, "facies": 1},
     "wells/well2B.rmswell": {"name": "well2B", "x": 3000.0, "y": 2000.0, "facies": 2},
     "wells/well2C.rmswell": {"name": "well2C", "x": 3040.0, "y": 2000.0, "facies": 2},
@@ -196,7 +271,7 @@ def _build_model_xml(model_number, seed, output_dir):
         _xml_tag("    ", "method",               "simulation"),
         _xml_tag("    ", "seed",                 seed),
         _xml_tag("    ", "n-threads",            4),
-        _xml_tag("    ", "logging-level-screen", 2),
+        _xml_tag("    ", "logging-level-screen", 4),
         '  </project-settings>',
         '  <grid-description>',
         '    <grid-resolution>',
@@ -309,7 +384,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     v1_azimuth      = r1["azimuth"] * 3.141592 / 180.0  # In radians, not degrees
     v1_genexp_power = r1["power"]
 
-    if model_number in ("2", "3", "4"):
+    if model_number[0] in ("2", "3", "4"):
         r2 = cfg["residuals"][1]
         v2_range_x      = r2["range"]
         v2_range_y      = r2["subrange"]
@@ -328,18 +403,18 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     t2 = np.zeros((nx, ny))
     for i in range(0, nx):
         for j in range(0, ny):
-            if model_number == "0":
+            if model_number[0] == "0":
                 t1[i][j] = norm.ppf(p_F1[i][j])
-            elif model_number == "1":
+            elif model_number[0] == "1":
                 t1[i][j] = norm.ppf(p_F1[i][j])
                 p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
                 t2[i][j] = norm.ppf(p1_p2)
-            elif model_number in ("2", "3", "4"):
+            elif model_number[0] in ("2", "3", "4"):
                 t1[i][j] = norm.ppf(p_F3[i][j])
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
-    if model_number in ("2", "3", "4"):
+    if model_number[0] in ("2", "3", "4"):
         v2 = GeneralExponentialVariogram(v2_range_x, v2_range_y, v2_range_z, azi=v2_azimuth, power=v2_genexp_power)
 
     out_z = []
@@ -347,24 +422,24 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
         if print_info:
             _print_progress_bar(iteration, n_simulations, prefix="Progress")
         s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed = iteration)
-        if model_number in ("2", "3", "4"):
+        if model_number[0] in ("2", "3", "4"):
             s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed = iteration)
         z = np.ndarray(s1.shape)
         for i in range(0, nx):
             for j in range(0, ny):
-                if model_number == "0":
+                if model_number[0] == "0":
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 1
                     else:
                         z[i][j] = 2
-                elif model_number == "1":
+                elif model_number[0] == "1":
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 1
                     elif s1[i][j] < t2[i][j]:
                         z[i][j] = 2
                     else:
                         z[i][j] = 3
-                elif model_number in ("2", "3", "4"):
+                elif model_number[0] in ("2", "3", "4"):
                     if s1[i][j] < t1[i][j]:
                         z[i][j] = 3
                     elif s2[i][j] < t2[i][j]:
