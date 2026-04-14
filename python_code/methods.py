@@ -558,21 +558,21 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
 
     _t = time.time()
     save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)
-    print(f"{CYAN}  [timing] {prefix} save_facies_grids_as_png:        {time.time()-_t:6.2f}s{RESET}")
+    print(f"{CYAN}  [timing] {prefix + ' save_facies_grids_as_png:':<42} {time.time()-_t:6.2f}s{RESET}")
 
     _t = time.time()
     calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
-    print(f"{CYAN}  [timing] {prefix} calculate_and_save_facies_prob:  {time.time()-_t:6.2f}s{RESET}")
+    print(f"{CYAN}  [timing] {prefix + ' calculate_and_save_facies_prob:':<42} {time.time()-_t:6.2f}s{RESET}")
 
     if save_thresholds:
         _t = time.time()
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
-        print(f"{CYAN}  [timing] {prefix} save_threshold_grids_as_png:    {time.time()-_t:6.2f}s{RESET}")
+        print(f"{CYAN}  [timing] {prefix + ' save_threshold_grids_as_png:':<42} {time.time()-_t:6.2f}s{RESET}")
 
     if model_number[0] != "0":
         _t = time.time()
         count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
-        print(f"{CYAN}  [timing] {prefix} count_connected_grid_nodes:     {time.time()-_t:6.2f}s{RESET}")
+        print(f"{CYAN}  [timing] {prefix + ' count_connected_grid_nodes:':<42} {time.time()-_t:6.2f}s{RESET}")
         sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
         count_connected_filtered = [c for c in count_connected if c != -1]
         if verbose:
@@ -585,7 +585,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         wd = WELL_DATA[wp]
         _t = time.time()
         per_well_counts = count_connected_nodes_from_point(z, parameters, wd["x"], wd["y"])
-        print(f"{CYAN}  [timing] {prefix} count_connected_nodes [{wd['name']}]: {time.time()-_t:6.2f}s{RESET}")
+        print(f"{CYAN}  [timing] {(prefix + ' count_connected_nodes [' + wd['name'] + ']:'):<42} {time.time()-_t:6.2f}s{RESET}")
         well_plot_data.append((prefix + "_" + wd["name"], per_well_counts))
         stat_lines = _cluster_size_stats_lines(per_well_counts, wd["name"], prefix)
         summary_lines = _cluster_summary_stats_lines(per_well_counts, wd["name"], prefix)
@@ -599,7 +599,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
                 _lf.write("\n")
                 _lf.write("\n".join(all_lines) + "\n")
 
-    print(f"{CYAN}  [timing] {prefix} _analyse total:                  {time.time()-_t0:6.2f}s{RESET}")
+    print(f"{CYAN}  [timing] {prefix + ' _analyse total:':<42} {time.time()-_t0:6.2f}s{RESET}")
     return count_connected_filtered, well_plot_data
 
 

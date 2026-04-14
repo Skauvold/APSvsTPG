@@ -21,8 +21,8 @@ RUN_APS = True
 verbose = True
 verbose_trane = False
 plot_histograms = True
-n_workers = 10  # parallel workers for TRANE and APS simulations
-max_facies_grid_exports = 20  # max facies grid images saved per method (None = all)
+n_workers = 14  # parallel workers for TRANE and APS simulations
+max_facies_grid_exports = 200  # max facies grid images saved per method (None = all)
 
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
@@ -85,11 +85,11 @@ if RUN_TRANE:
     if not use_existing_results:
         _t0 = time.time()
         z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane, n_workers)
-        print(f"\033[36m  [timing] run_TRANE_simulations: {time.time()-_t0:.2f}s\033[0m")
+        print(f"\033[36m  [timing] {'run_TRANE_simulations:':<42} {time.time()-_t0:6.2f}s\033[0m")
         _t0 = time.time()
         _save(os.path.join(path_pickle_trane, "z_TRANE"), z_TRANE)
         _save(os.path.join(path_pickle_trane, "parameters"), parameters)
-        print(f"\033[36m  [timing] pickle save TRANE:      {time.time()-_t0:.2f}s\033[0m")
+        print(f"\033[36m  [timing] {'pickle save TRANE:':<42} {time.time()-_t0:6.2f}s\033[0m")
     else:
         print("  Loading from file...")
         _load_pickle_trane = os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
@@ -102,7 +102,6 @@ if RUN_TRANE:
     _t0 = time.time()
     count_connected_filtered_TRANE, trane_well_data = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
         max_facies_grid_exports=max_facies_grid_exports, save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
-    print(f"\033[36m  [timing] _analyse TRANE (total):  {time.time()-_t0:.2f}s\033[0m")
 
 if RUN_APS:
     _print_header('APS simulations')
@@ -120,10 +119,10 @@ if RUN_APS:
         _aps_data_dir = path_pickle_trane if RUN_TRANE else os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
         _t0 = time.time()
         z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True, data_dir=_aps_data_dir, n_workers=n_workers)
-        print(f"\033[36m  [timing] run_APS_simulations:    {time.time()-_t0:.2f}s\033[0m")
+        print(f"\033[36m  [timing] {'run_APS_simulations:':<42} {time.time()-_t0:6.2f}s\033[0m")
         _t0 = time.time()
         _save(os.path.join(path_pickle_aps, "z_APS"), z_APS)
-        print(f"\033[36m  [timing] pickle save APS:        {time.time()-_t0:.2f}s\033[0m")
+        print(f"\033[36m  [timing] {'pickle save APS:':<42} {time.time()-_t0:6.2f}s\033[0m")
     else:
         _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
         z_APS = _load(_load_pickle_aps, "z_APS")
@@ -131,7 +130,6 @@ if RUN_APS:
     _t0 = time.time()
     count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
         max_facies_grid_exports=max_facies_grid_exports, output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
-    print(f"\033[36m  [timing] _analyse APS (total):   {time.time()-_t0:.2f}s\033[0m")
 
 # ============================================================
 # Histograms
@@ -157,7 +155,7 @@ if _all_well_counts:
     for _name, _counts in aps_well_data:
         plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
             output_dir=path_output_aps)
-print(f"\033[36m  [timing] histogram plotting:      {time.time()-_t0:.2f}s\033[0m")
+print(f"\033[36m  [timing] {'histogram plotting:':<42} {time.time()-_t0:6.2f}s\033[0m")
 
 # Two-point connection histograms (not applicable for model 0)
 if plot_histograms and RUN_TRANE and RUN_APS:
