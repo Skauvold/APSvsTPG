@@ -14,7 +14,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "5A"
-n_sim = 10
+n_sim = 1000
 use_existing_results = False
 
 RUN_TRANE = True

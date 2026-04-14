@@ -324,7 +324,7 @@ WELL_DATA = {
     "wells/well4_48.rmswell": {"name": "well4_48", "x": 5100.0, "y": 3500.0, "facies": 2},
     "wells/well4_49.rmswell": {"name": "well4_49", "x": 5700.0, "y": 3500.0, "facies": 1},
     # ── Model 5A: 10-facies, single well, F8 observation ─────────────────
-    "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 8},
+    "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
 }
 
 
