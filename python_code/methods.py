@@ -545,10 +545,16 @@ def _load(path, name):
         return pickle.load(fp)
 
 
-def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir=".", log_file=None):
+def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_grid_exports=100, save_thresholds=False, output_dir=".", data_dir=".", log_file=None):
     CYAN  = "\033[36m"
     RESET = "\033[0m"
     _t0 = time.time()
+
+    n_sim = len(z)
+    if max_facies_grid_exports is None or max_facies_grid_exports >= n_sim:
+        save_indices = "all"
+    else:
+        save_indices = set(range(max_facies_grid_exports))
 
     _t = time.time()
     save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)

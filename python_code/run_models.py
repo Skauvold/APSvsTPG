@@ -22,6 +22,7 @@ verbose = True
 verbose_trane = False
 plot_histograms = True
 n_workers = 10  # parallel workers for TRANE and APS simulations
+max_facies_grid_exports = 20  # max facies grid images saved per method (None = all)
 
 # path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models"
 path_trane_models = "C:\\Projects\\trane\\trane_work\\2022\\2022_09_12_compare_pgs_blitzkriging\\APSvsTPG\\TRANE_models_autocreated"
@@ -100,7 +101,7 @@ if RUN_TRANE:
 
     _t0 = time.time()
     count_connected_filtered_TRANE, trane_well_data = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
-        save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
+        max_facies_grid_exports=max_facies_grid_exports, save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
     print(f"\033[36m  [timing] _analyse TRANE (total):  {time.time()-_t0:.2f}s\033[0m")
 
 if RUN_APS:
@@ -129,7 +130,7 @@ if RUN_APS:
 
     _t0 = time.time()
     count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
-        save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
+        max_facies_grid_exports=max_facies_grid_exports, output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
     print(f"\033[36m  [timing] _analyse APS (total):   {time.time()-_t0:.2f}s\033[0m")
 
 # ============================================================
