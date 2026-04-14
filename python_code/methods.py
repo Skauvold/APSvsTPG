@@ -738,7 +738,7 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
         plt.close()
 
 def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
-    fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots(figsize=(15, 10))
     binwidth = xmax / n_bins
     ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue')
     ax1.set_ylabel('Count')
@@ -756,7 +756,7 @@ def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, y
         ax2.set_ylabel('CDF')
         ax2.set_ylim(0.0, 1.0)
 
-    plt.savefig(os.path.join(output_dir, prefix + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png'), dpi=100)
+    plt.savefig(os.path.join(output_dir, prefix + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png'), dpi=100, bbox_inches='tight', pad_inches=0.3)
     plt.close()
 
 def calculate_volume_fractions(facies_grids):
