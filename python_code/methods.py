@@ -5,6 +5,7 @@ import pickle
 import subprocess
 import statistics
 import sys
+import time
 
 import matplotlib.pyplot as plt
 from matplotlib import colors, patches
@@ -545,22 +546,40 @@ def _load(path, name):
 
 
 def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices="all", save_thresholds=False, output_dir=".", data_dir=".", log_file=None):
+    CYAN  = "\033[36m"
+    RESET = "\033[0m"
+    _t0 = time.time()
+
+    _t = time.time()
     save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)
+    print(f"{CYAN}  [timing] {prefix} save_facies_grids_as_png:        {time.time()-_t:6.2f}s{RESET}")
+
+    _t = time.time()
     calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
+    print(f"{CYAN}  [timing] {prefix} calculate_and_save_facies_prob:  {time.time()-_t:6.2f}s{RESET}")
+
     if save_thresholds:
+        _t = time.time()
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
+        print(f"{CYAN}  [timing] {prefix} save_threshold_grids_as_png:    {time.time()-_t:6.2f}s{RESET}")
+
     if model_number[0] != "0":
+        _t = time.time()
         count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
+        print(f"{CYAN}  [timing] {prefix} count_connected_grid_nodes:     {time.time()-_t:6.2f}s{RESET}")
         sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
         count_connected_filtered = [c for c in count_connected if c != -1]
         if verbose:
             _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
     else:
         count_connected_filtered = []
+
     well_plot_data = []
     for wp in MODEL_CONFIGS[model_number]["wells"]:
         wd = WELL_DATA[wp]
+        _t = time.time()
         per_well_counts = count_connected_nodes_from_point(z, parameters, wd["x"], wd["y"])
+        print(f"{CYAN}  [timing] {prefix} count_connected_nodes [{wd['name']}]: {time.time()-_t:6.2f}s{RESET}")
         well_plot_data.append((prefix + "_" + wd["name"], per_well_counts))
         stat_lines = _cluster_size_stats_lines(per_well_counts, wd["name"], prefix)
         summary_lines = _cluster_summary_stats_lines(per_well_counts, wd["name"], prefix)
@@ -573,6 +592,8 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices=
             with open(log_file, 'a') as _lf:
                 _lf.write("\n")
                 _lf.write("\n".join(all_lines) + "\n")
+
+    print(f"{CYAN}  [timing] {prefix} _analyse total:                  {time.time()-_t0:6.2f}s{RESET}")
     return count_connected_filtered, well_plot_data
 
 
@@ -712,38 +733,21 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
     y_min = 0.0
     y_max = dy * ny
     extent = x_min, x_max, y_min, y_max
-    x    = np.linspace(0.0, x_length, num=nx)
-    y    = np.linspace(0.0, y_length, num=ny)
-    # X, Y = np.meshgrid(x, y)
-    X, Y = np.meshgrid(y, x)
+
     n_facies = MODEL_CONFIGS[model_number]["n_facies"]
-    p_F1 = (X ** 2 - Y ** 2) * 0.0
-    p_F2 = (X ** 2 - Y ** 2) * 0.0
-    p_F3 = (X ** 2 - Y ** 2) * 0.0 if n_facies >= 3 else None
-    for iteration, z in enumerate(facies_grids):
-        for i in range(0, nx):
-            for j in range(0, ny):
-                a = 1 if z[i][j] == 1 else 0
-                b = 1 if z[i][j] == 2 else 0
-                p_F1[i][j]  = (p_F1[i][j]  * iteration + a) / (iteration + 1)
-                p_F2[i][j]  = (p_F2[i][j]  * iteration + b) / (iteration + 1)
-                if n_facies >= 3:
-                    c = 1 if z[i][j] == 3 else 0
-                    p_F3[i][j]  = (p_F3[i][j]  * iteration + c) / (iteration + 1)
+
+    z_stack = np.stack(facies_grids, axis=0)  # shape: (n_sim, nx, ny)
+    p_F1 = np.mean(z_stack == 1, axis=0)
+    p_F2 = np.mean(z_stack == 2, axis=0)
+    p_F3 = np.mean(z_stack == 3, axis=0) if n_facies >= 3 else None
+
     np.save(os.path.join(data_dir, "p1_from_" + prefix), p_F1)
     np.save(os.path.join(data_dir, "p2_from_" + prefix), p_F2)
     if n_facies >= 3:
         np.save(os.path.join(data_dir, "p3_from_" + prefix), p_F3)
     facies_probs = [p_F1, p_F2] if n_facies == 2 else [p_F1, p_F2, p_F3]
     for i, p in enumerate(facies_probs):
-        # To plot the ndarray correctly:
-        x_lin = np.linspace(0.0, x_length, num=nx)
-        y_lin = np.linspace(0.0, y_length, num=ny)
-        Y, X  = np.meshgrid(x_lin, y_lin)
-        p_for_plotting  = (X ** 2 - Y ** 2) * 0.0
-        for ii in range(0, nx):
-            for j in range(0, ny):
-                p_for_plotting[j][ii] = p[ii][ny - 1 - j]
+        p_for_plotting = np.flipud(p.T)
 
         fig = plt.figure(frameon=False)
         fig.set_size_inches(6,4)

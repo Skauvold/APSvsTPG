@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 from datetime import datetime
 
 from methods import (run_TRANE_simulations, run_APS_simulations,
@@ -12,7 +13,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "0D"
-n_sim = 500
+n_sim = 100
 use_existing_results = False
 
 RUN_TRANE = True
@@ -81,9 +82,13 @@ if RUN_TRANE:
 
     _print_header('TRANE simulations')
     if not use_existing_results:
+        _t0 = time.time()
         z_TRANE, parameters = run_TRANE_simulations(n_sim, MODEL, path_trane_models, path_trane_exe, True, verbose_trane, n_workers)
+        print(f"\033[36m  [timing] run_TRANE_simulations: {time.time()-_t0:.2f}s\033[0m")
+        _t0 = time.time()
         _save(os.path.join(path_pickle_trane, "z_TRANE"), z_TRANE)
         _save(os.path.join(path_pickle_trane, "parameters"), parameters)
+        print(f"\033[36m  [timing] pickle save TRANE:      {time.time()-_t0:.2f}s\033[0m")
     else:
         print("  Loading from file...")
         _load_pickle_trane = os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
@@ -93,8 +98,10 @@ if RUN_TRANE:
     dx = parameters[0]
     dy = parameters[1]
 
+    _t0 = time.time()
     count_connected_filtered_TRANE, trane_well_data = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
         save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
+    print(f"\033[36m  [timing] _analyse TRANE (total):  {time.time()-_t0:.2f}s\033[0m")
 
 if RUN_APS:
     _print_header('APS simulations')
@@ -110,30 +117,46 @@ if RUN_APS:
 
     if not use_existing_results:
         _aps_data_dir = path_pickle_trane if RUN_TRANE else os.path.join(path_trane_results_to_load, "output_TRANE", "pickle_backup")
+        _t0 = time.time()
         z_APS = run_APS_simulations(n_sim, nx, ny, dx, dy, MODEL, True, data_dir=_aps_data_dir, n_workers=n_workers)
+        print(f"\033[36m  [timing] run_APS_simulations:    {time.time()-_t0:.2f}s\033[0m")
+        _t0 = time.time()
         _save(os.path.join(path_pickle_aps, "z_APS"), z_APS)
+        print(f"\033[36m  [timing] pickle save APS:        {time.time()-_t0:.2f}s\033[0m")
     else:
         _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
         z_APS = _load(_load_pickle_aps, "z_APS")
 
+    _t0 = time.time()
     count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
         save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
+    print(f"\033[36m  [timing] _analyse APS (total):   {time.time()-_t0:.2f}s\033[0m")
 
 # ============================================================
 # Histograms
 # ============================================================
 # Per-well cluster size histograms — shared x/y axis across TRANE and APS
+_t0 = time.time()
 _all_well_counts = [c for _, counts in trane_well_data + aps_well_data for c in counts]
-_n_bins = max(10, n_sim // 50)
+_n_bins = max(10, n_sim // 25)
 if _all_well_counts:
     _xmax_well = max(_all_well_counts) * 1.1
-    _ymax_well = n_sim
+    _binwidth = _xmax_well / _n_bins
+    _bin_edges = [i * _binwidth for i in range(_n_bins + 1)]
+    _ymax_well = 0
+    for _, _counts in trane_well_data + aps_well_data:
+        for _b in range(_n_bins):
+            _bc = sum(1 for v in _counts if _bin_edges[_b] <= v < _bin_edges[_b + 1])
+            if _bc > _ymax_well:
+                _ymax_well = _bc
+    _ymax_well = _ymax_well * 1.1
     for _name, _counts in trane_well_data:
         plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
             output_dir=path_output_trane)
     for _name, _counts in aps_well_data:
         plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
             output_dir=path_output_aps)
+print(f"\033[36m  [timing] histogram plotting:      {time.time()-_t0:.2f}s\033[0m")
 
 # Two-point connection histograms (not applicable for model 0)
 if plot_histograms and RUN_TRANE and RUN_APS:
