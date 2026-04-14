@@ -2,6 +2,7 @@ from datetime import datetime
 import math
 import os
 import pickle
+import shutil
 import subprocess
 import statistics
 import sys
@@ -508,6 +509,14 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
             completed[0] += 1
             if print_info:
                 _print_progress_bar(completed[0], n_simulations, prefix="Progress")
+            # Delete per-iteration files immediately after data is read (keep iteration 0)
+            if iteration != 0:
+                xml_path = os.path.join(path_trane_models, f"model{model_number}_edited_{iteration}.xml")
+                out_dir  = os.path.join(path_trane_models, f"output{model_number}_edited_{iteration}")
+                if os.path.exists(xml_path):
+                    os.remove(xml_path)
+                if os.path.exists(out_dir):
+                    shutil.rmtree(out_dir)
 
     parameters = [dx, dy, X_LENGTH, Y_LENGTH]
     if print_info:

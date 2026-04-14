@@ -14,13 +14,13 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "5A"
-n_sim = 1
+n_sim = 10
 use_existing_results = False
 
 RUN_TRANE = True
 RUN_APS = True
 verbose = True
-verbose_trane = True
+verbose_trane = False
 plot_histograms = True
 n_workers = 14  # parallel workers for TRANE and APS simulations
 max_facies_grid_exports = 200  # max facies grid images saved per method (None = all)
