@@ -476,7 +476,10 @@ def _print_results(sum_connected, count_connected, count_connected_filtered, dx,
     print(f"#realizations with connection: {len(count_connected_filtered)} / {len(count_connected)}")
     if count_connected_filtered:
         print(f"Mean connected nodes:      {statistics.mean(count_connected_filtered):.2f}")
-        print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered):.2f}")
+        if len(count_connected_filtered) >= 2:
+            print(f"Stdev connected nodes:     {statistics.stdev(count_connected_filtered):.2f}")
+        else:
+            print(f"Stdev connected nodes:     n/a (only 1 realization)")
         print(f"Max connected nodes:       {max(count_connected_filtered)}")
     else:
         print(f"{RED}No connected realizations — both observation points never in same facies body{RESET}")
@@ -500,6 +503,19 @@ def _cluster_size_stats_lines(counts, well_name, prefix):
     return lines
 
 
+def _cluster_summary_stats_lines(counts, well_name, prefix):
+    n = len(counts)
+    lines = [f"Cluster size summary for {prefix}_{well_name} (n={n}):"]
+    if n > 0:
+        lines.append(f"  Mean:   {statistics.mean(counts):.2f}")
+        if n >= 2:
+            lines.append(f"  Stdev:  {statistics.stdev(counts):.2f}")
+        lines.append(f"  Median: {statistics.median(counts):.1f}")
+        lines.append(f"  Min:    {min(counts)}")
+        lines.append(f"  Max:    {max(counts)}")
+    return lines
+
+
 def _save(name, obj):
     with open(name, "wb") as fp:
         pickle.dump(obj, fp)
@@ -515,29 +531,31 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, save_indices=
     calculate_and_save_facies_prob_maps(z, parameters, prefix, model_number, output_dir=output_dir, data_dir=data_dir)
     if save_thresholds:
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
-    count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
-    sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
-    count_connected_filtered = [c for c in count_connected if c != -1]
-    if verbose:
-        _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
+    if model_number[0] != "0":
+        count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
+        sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
+        count_connected_filtered = [c for c in count_connected if c != -1]
+        if verbose:
+            _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
+    else:
+        count_connected_filtered = []
+    well_plot_data = []
     for wp in MODEL_CONFIGS[model_number]["wells"]:
         wd = WELL_DATA[wp]
         per_well_counts = count_connected_nodes_from_point(z, parameters, wd["x"], wd["y"])
-        xmax = max(per_well_counts) * 1.1
-        plot_histogram_of_connected_cells(
-            per_well_counts, prefix + "_" + wd["name"],
-            0.0, xmax, 0.0, len(z), 50, output_dir=output_dir
-        )
+        well_plot_data.append((prefix + "_" + wd["name"], per_well_counts))
         stat_lines = _cluster_size_stats_lines(per_well_counts, wd["name"], prefix)
+        summary_lines = _cluster_summary_stats_lines(per_well_counts, wd["name"], prefix)
+        all_lines = stat_lines + summary_lines
         if verbose:
             print()
-            for line in stat_lines:
+            for line in all_lines:
                 print(line)
         if log_file:
             with open(log_file, 'a') as _lf:
                 _lf.write("\n")
-                _lf.write("\n".join(stat_lines) + "\n")
-    return count_connected_filtered
+                _lf.write("\n".join(all_lines) + "\n")
+    return count_connected_filtered, well_plot_data
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir="."):
@@ -720,24 +738,25 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
         plt.close()
 
 def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
-    fig = plt.figure(frameon=False)
+    fig, ax1 = plt.subplots()
     binwidth = xmax / n_bins
-    density = False
-    count = True
-    plt.hist(sum_connected, density=density, bins=np.arange(xmin, xmax + binwidth, binwidth))
-    if density:
-        plt.ylabel('Probability')
-    else:
-        plt.ylabel('Count')
-    if count:
-        plt.xlabel('Connected grid nodes')
-    else:
-        plt.xlabel('Connected area')
-    plt.xlim(xmin=xmin, xmax=xmax)
-    if True:
-        plt.ylim(ymin=ymin, ymax=ymax)
+    ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue')
+    ax1.set_ylabel('Count')
+    ax1.set_xlabel('Connected grid nodes')
+    ax1.set_xlim(xmin, xmax)
+    ax1.set_ylim(ymin, ymax)
+
+    if sum_connected:
+        ax2 = ax1.twinx()
+        sorted_vals = sorted(sum_connected)
+        n = len(sorted_vals)
+        cdf_x = [xmin] + sorted_vals + [xmax]
+        cdf_y = [0.0] + [(i + 1) / n for i in range(n)] + [1.0]
+        ax2.step(cdf_x, cdf_y, where='post', color='darkorange', linewidth=1.5)
+        ax2.set_ylabel('CDF')
+        ax2.set_ylim(0.0, 1.0)
+
     plt.savefig(os.path.join(output_dir, prefix + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png'), dpi=100)
-    # plt.show()
     plt.close()
 
 def calculate_volume_fractions(facies_grids):

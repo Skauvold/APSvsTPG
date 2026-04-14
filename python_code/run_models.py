@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODEL = "0D"
-n_sim = 100
+n_sim = 10
 use_existing_results = False
 
 RUN_TRANE = True
@@ -69,6 +69,9 @@ with open(os.path.join(path_trane_results_to_save, "run_log.txt"), 'w') as _f:
     if use_existing_results:
         _f.write(f"Loaded results from:  {path_trane_results_to_load}\n")
 
+trane_well_data = []
+aps_well_data = []
+
 if RUN_TRANE:
     resolved_trane_exe = os.path.expandvars(path_trane_exe)
     if not os.path.isfile(resolved_trane_exe):
@@ -89,7 +92,7 @@ if RUN_TRANE:
     dx = parameters[0]
     dy = parameters[1]
 
-    count_connected_filtered_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
+    count_connected_filtered_TRANE, trane_well_data = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
         save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
 
 if RUN_APS:
@@ -112,20 +115,33 @@ if RUN_APS:
         _load_pickle_aps = os.path.join(path_trane_results_to_load, "output_APS", "pickle_backup")
         z_APS = _load(_load_pickle_aps, "z_APS")
 
-    count_connected_filtered_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
+    count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
         save_indices="all", output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
 
 # ============================================================
 # Histograms
 # ============================================================
+# Per-well cluster size histograms — shared x/y axis across TRANE and APS
+_all_well_counts = [c for _, counts in trane_well_data + aps_well_data for c in counts]
+if _all_well_counts:
+    _xmax_well = max(_all_well_counts) * 1.1
+    _ymax_well = n_sim
+    for _name, _counts in trane_well_data:
+        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, 50,
+            output_dir=path_output_trane)
+    for _name, _counts in aps_well_data:
+        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, 50,
+            output_dir=path_output_aps)
+
+# Two-point connection histograms (not applicable for model 0)
 if plot_histograms and RUN_TRANE and RUN_APS:
-    max1 = max(count_connected_filtered_TRANE)
-    max2 = max(count_connected_filtered_APS)
-    max3 = max(max1, max2)
-    plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3*1.05, 0.0, 100, 50,
-        output_dir=path_output_trane)
-    plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3*1.05, 0.0, 100, 50,
-        output_dir=path_output_aps)
+    all_connected = count_connected_filtered_TRANE + count_connected_filtered_APS
+    if all_connected:
+        max3 = max(all_connected) * 1.05
+        plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, n_sim, 50,
+            output_dir=path_output_trane)
+        plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, n_sim, 50,
+            output_dir=path_output_aps)
 
 
 
