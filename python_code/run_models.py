@@ -12,7 +12,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODEL = "0D"
+MODEL = "0F"
 n_sim = 100
 use_existing_results = False
 
