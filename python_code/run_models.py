@@ -124,24 +124,25 @@ if RUN_APS:
 # ============================================================
 # Per-well cluster size histograms — shared x/y axis across TRANE and APS
 _all_well_counts = [c for _, counts in trane_well_data + aps_well_data for c in counts]
+_n_bins = max(10, n_sim // 50)
 if _all_well_counts:
     _xmax_well = max(_all_well_counts) * 1.1
     _ymax_well = n_sim
     for _name, _counts in trane_well_data:
-        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, 50,
+        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
             output_dir=path_output_trane)
     for _name, _counts in aps_well_data:
-        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, 50,
+        plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
             output_dir=path_output_aps)
 
 # Two-point connection histograms (not applicable for model 0)
 if plot_histograms and RUN_TRANE and RUN_APS:
     all_connected = count_connected_filtered_TRANE + count_connected_filtered_APS
     if all_connected:
-        max3 = max(all_connected) * 1.05
-        plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, n_sim, 50,
+        max3 = max(all_connected) * 1.02
+        plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, n_sim, _n_bins,
             output_dir=path_output_trane)
-        plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, n_sim, 50,
+        plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, n_sim, _n_bins,
             output_dir=path_output_aps)
 
 
