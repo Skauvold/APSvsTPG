@@ -15,7 +15,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODELS = ["1Ib"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 50
+n_sim = 200
 use_existing_results = False
 
 RUN_TRANE = True

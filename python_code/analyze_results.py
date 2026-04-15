@@ -212,18 +212,15 @@ def main():
     ]
     conn_col_candidates = [
         ("T conn",    "trane_conn",    False),
-        ("T cmean",   "trane_cmean",   False),
-        ("T cmin",    "trane_cmin",    False),
-        ("T cmax",    "trane_cmax",    False),
         ("A conn",    "aps_conn",      False),
+        ("T cmean",   "trane_cmean",   False),
         ("A cmean",   "aps_cmean",     False),
+        ("T cmin",    "trane_cmin",    False),
         ("A cmin",    "aps_cmin",      False),
+        ("T cmax",    "trane_cmax",    False),
         ("A cmax",    "aps_cmax",      False),
     ]
-    col_defs = base_col_defs + [
-        cd for cd in conn_col_candidates
-        if any(data[cd[1]] != "x" for _, data in rows)
-    ]
+    col_defs = base_col_defs + conn_col_candidates
 
     # Compute column widths from headers and all row values
     def cell_value(run_name, data, key):
@@ -247,7 +244,7 @@ def main():
         n for n, _ in sorted(rows, key=lambda x: x[0][:13], reverse=True)[:1]
     )
 
-    size1_keys = {"trane_size1", "aps_size1"}
+    size1_keys = {"trane_size1", "aps_size1", "trane_conn", "aps_conn"}
 
     sep = "  "
 
