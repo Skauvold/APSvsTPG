@@ -251,6 +251,21 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2B.rmswell"],
     },
+    "1M": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.25"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": [
+            "wells/well_1M_0.rmswell",
+            "wells/well_1M_1.rmswell", "wells/well_1M_2.rmswell",
+            "wells/well_1M_3.rmswell", "wells/well_1M_4.rmswell",
+        ],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -315,6 +330,31 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
         "wells": ["wells/well6.rmswell"],
+    },
+    "5B": {
+        "n_facies": 8,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3 F4 F5 F6 F7 F8",
+             "residual_ids": "1  1  1  1  1  1  1",
+             "trend_ids":    "1  2  3  4  5  6  7"},
+        ],
+        "trends": [
+            ("1", "1.1503"),
+            ("2", "0.6745"),
+            ("3", "0.3186"),
+            ("4",  "0.0000"),
+            ("5",  "-0.3186"),
+            ("6",  "-0.6745"),
+            ("7",  "-1.1503"),
+        ],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": [
+            "wells/well_5B_0.rmswell",
+            "wells/well_5B_1.rmswell", "wells/well_5B_2.rmswell",
+            "wells/well_5B_3.rmswell", "wells/well_5B_4.rmswell",
+        ],
     },
     # ── Model 6: 4-facies, 3-level hierarchy, 3 independent GRFs ────────────
     # Level 1 (Background):  F4  | F1F2F3   (GRF 1, trend 1)
@@ -467,6 +507,18 @@ WELL_DATA = {
     "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
     "wells/well7.rmswell": {"name": "well7", "x": 3000.0, "y": 2000.0, "facies": 4},
     "wells/well8.rmswell": {"name": "well8", "x": 3000.0, "y": 2000.0, "facies": 2},
+    # ── Model 1M: 5 observations spread across grid, all facies=2 (like 1F) ──
+    "wells/well_1M_0.rmswell": {"name": "well_1M_0", "x": 3000.0, "y": 2000.0, "facies": 2},
+    "wells/well_1M_1.rmswell": {"name": "well_1M_1", "x": 1000.0, "y": 1000.0, "facies": 2},
+    "wells/well_1M_2.rmswell": {"name": "well_1M_2", "x": 5000.0, "y": 1000.0, "facies": 2},
+    "wells/well_1M_3.rmswell": {"name": "well_1M_3", "x": 1000.0, "y": 3000.0, "facies": 2},
+    "wells/well_1M_4.rmswell": {"name": "well_1M_4", "x": 5000.0, "y": 3000.0, "facies": 2},
+    # ── Model 5B: 5 observations spread across grid, all facies=5 (like 5A) ──
+    "wells/well_5B_0.rmswell": {"name": "well_5B_0", "x": 3000.0, "y": 2000.0, "facies": 5},
+    "wells/well_5B_1.rmswell": {"name": "well_5B_1", "x": 1000.0, "y": 1000.0, "facies": 5},
+    "wells/well_5B_2.rmswell": {"name": "well_5B_2", "x": 5000.0, "y": 1000.0, "facies": 5},
+    "wells/well_5B_3.rmswell": {"name": "well_5B_3", "x": 1000.0, "y": 3000.0, "facies": 5},
+    "wells/well_5B_4.rmswell": {"name": "well_5B_4", "x": 5000.0, "y": 3000.0, "facies": 5},
 }
 
 
