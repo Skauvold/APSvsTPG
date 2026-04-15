@@ -174,6 +174,39 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2B.rmswell"],
     },
+    "1F": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.25"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1G": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.1"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1H": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -240,6 +273,26 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
         "wells": ["wells/well6.rmswell"],
+    },
+    # ── Model 6: 4-facies, 3-level hierarchy, 3 independent GRFs ────────────
+    # Level 1 (Background):  F4  | F1F2F3   (GRF 1, trend 1)
+    # Level 2 (F1F2F3):      F3  | F1F2     (GRF 2, trend 2)
+    # Level 3 (F1F2):        F1  | F2       (GRF 3, trend 3)
+    # An F1 or F2 observation constrains all three GRFs.
+    "6A": {
+        "n_facies": 4,
+        "facies_models": [
+            {"parent": "background", "names": "F4 F1F2F3", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2F3",     "names": "F3 F1F2",   "residual_ids": "2", "trend_ids": "2"},
+            {"parent": "F1F2",       "names": "F1 F2",     "residual_ids": "3", "trend_ids": "3"},
+        ],
+        "trends": [("1", "2.0"), ("2", "2.0"), ("3", "2.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
+            {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well7.rmswell"],
     },
 }
 
@@ -325,6 +378,7 @@ WELL_DATA = {
     "wells/well4_49.rmswell": {"name": "well4_49", "x": 5700.0, "y": 3500.0, "facies": 1},
     # ── Model 5A: 10-facies, single well, F8 observation ─────────────────
     "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
+    "wells/well7.rmswell": {"name": "well7", "x": 3000.0, "y": 2000.0, "facies": 4},
 }
 
 
@@ -523,9 +577,10 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
         print()
     return out_z, parameters
 
-def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family, thresholds=None):
+def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family, thresholds=None, v3=None, t3=None):
     s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed=iteration)
     s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed=iteration) if v2 is not None else None
+    s3 = simulate_gaussian_field(v3, nx, dx, ny, dy, seed=iteration) if v3 is not None else None
     z = np.ndarray(s1.shape)
     for i in range(nx):
         for j in range(ny):
@@ -547,6 +602,16 @@ def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family, thr
                         assigned = k + 1
                         break
                 z[i][j] = assigned
+            elif model_family == "6":
+                # 3-level hierarchy: Background→F4|F1F2F3 → F3|F1F2 → F1|F2
+                if s1[i][j] < t1[i][j]:
+                    z[i][j] = 4  # F4
+                elif s2[i][j] < t2[i][j]:
+                    z[i][j] = 3  # F3
+                elif s3[i][j] < t3[i][j]:
+                    z[i][j] = 1  # F1
+                else:
+                    z[i][j] = 2  # F2
             else:
                 if s1[i][j] < t1[i][j]:
                     z[i][j] = 3
@@ -566,13 +631,20 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     v1_azimuth      = r1["azimuth"] * 3.141592 / 180.0  # In radians, not degrees
     v1_genexp_power = r1["power"]
 
-    if model_number[0] in ("2", "3", "4"):
+    if model_number[0] in ("2", "3", "4", "6"):
         r2 = cfg["residuals"][1]
         v2_range_x      = r2["range"]
         v2_range_y      = r2["subrange"]
         v2_range_z      = Z_LENGTH
         v2_azimuth      = r2["azimuth"]  # Already 0.0, no conversion needed
         v2_genexp_power = r2["power"]
+    if model_number[0] == "6":
+        r3 = cfg["residuals"][2]
+        v3_range_x      = r3["range"]
+        v3_range_y      = r3["subrange"]
+        v3_range_z      = Z_LENGTH
+        v3_azimuth      = r3["azimuth"]
+        v3_genexp_power = r3["power"]
 
     n_facies = MODEL_CONFIGS[model_number]["n_facies"]
     p_F1 = np.load(os.path.join(data_dir, "p1_from_TRANE.npy"))
@@ -585,6 +657,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     # Calculate thresholds
     t1 = np.zeros((nx, ny))
     t2 = np.zeros((nx, ny))
+    t3 = np.zeros((nx, ny))
     thresholds_5 = None  # list of (n_facies-1) threshold arrays for model family "5"
     for i in range(0, nx):
         for j in range(0, ny):
@@ -597,6 +670,15 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
             elif model_number[0] in ("2", "3", "4"):
                 t1[i][j] = norm.ppf(p_F3[i][j])
                 t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
+            elif model_number[0] == "6":
+                # Background→F4|F1F2F3: t1 cuts off F4 probability
+                t1[i][j] = norm.ppf(np.clip(p_all[3][i][j], 1e-9, 1.0 - 1e-9))
+                # F1F2F3→F3|F1F2: t2 cuts off F3 conditional on not-F4
+                p_not_f4 = max(1e-9, 1.0 - p_all[3][i][j])
+                t2[i][j] = norm.ppf(np.clip(p_all[2][i][j] / p_not_f4, 1e-9, 1.0 - 1e-9))
+                # F1F2→F1|F2: t3 cuts off F1 conditional on being in F1F2
+                p_f1f2 = max(1e-9, p_all[0][i][j] + p_all[1][i][j])
+                t3[i][j] = norm.ppf(np.clip(p_all[0][i][j] / p_f1f2, 1e-9, 1.0 - 1e-9))
     if model_number[0] == "5":
         # Build n_facies-1 cumulative threshold arrays from cumulative probabilities
         thresholds_5 = []
@@ -606,8 +688,11 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
     v2 = None
-    if model_number[0] in ("2", "3", "4"):
+    if model_number[0] in ("2", "3", "4", "6"):
         v2 = GeneralExponentialVariogram(v2_range_x, v2_range_y, v2_range_z, azi=v2_azimuth, power=v2_genexp_power)
+    v3 = None
+    if model_number[0] == "6":
+        v3 = GeneralExponentialVariogram(v3_range_x, v3_range_y, v3_range_z, azi=v3_azimuth, power=v3_genexp_power)
 
     out_z = [None] * n_simulations
     completed = [0]
@@ -616,7 +701,7 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
 
     with ThreadPoolExecutor(max_workers=n_workers) as executor:
         futures = {
-            executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0], thresholds_5): i
+            executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0], thresholds_5, v3, t3): i
             for i in range(n_simulations)
         }
         for future in as_completed(futures):
