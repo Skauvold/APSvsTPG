@@ -14,8 +14,8 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODELS = ["0A", "0B", "0C", "0D", "0E", "0F", "0G"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 100
+MODELS = ["1K", "1L"]  # list of models to run sequentially; each gets its own results folder
+n_sim = 1000
 use_existing_results = False
 
 RUN_TRANE = True
@@ -23,7 +23,7 @@ RUN_APS = True
 verbose = True
 verbose_trane = False
 plot_histograms = True
-n_workers = 10  # parallel workers for TRANE and APS simulations
+n_workers = 14  # parallel workers for TRANE and APS simulations
 max_facies_grid_exports = 200  # max facies grid images saved per method (None = all)
 save_pickles = False  # save z_TRANE / z_APS / parameters as pickle files
 

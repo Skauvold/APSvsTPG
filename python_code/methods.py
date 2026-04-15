@@ -207,6 +207,50 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2B.rmswell"],
     },
+    "1I": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 4000.0, "subrange": 2500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1J": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 200.0, "subrange": 125.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1K": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
+    "1L": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 16000.0, "subrange": 10000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell"],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -221,8 +265,7 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2.rmswell"],
     },
-    # ── Model 3: same as 2A but with 2 wells ─────────────────────────────
-    "3A": {
+    "2B": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
@@ -235,8 +278,7 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
     },
-    # ── Model 4: same as 3A but larger variogram ranges ──────────────────
-    "4A": {
+    "2C": {
         "n_facies": 3,
         "facies_models": [
             {"parent": "background", "names": "F3 F1F2", "residual_ids": "1", "trend_ids": "1"},
@@ -293,6 +335,51 @@ MODEL_CONFIGS = {
             {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
         ],
         "wells": ["wells/well7.rmswell"],
+    },
+    "6B": {
+        "n_facies": 4,
+        "facies_models": [
+            {"parent": "background", "names": "F4 F1F2F3", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2F3",     "names": "F3 F1F2",   "residual_ids": "2", "trend_ids": "2"},
+            {"parent": "F1F2",       "names": "F1 F2",     "residual_ids": "3", "trend_ids": "3"},
+        ],
+        "trends": [("1", "-2.0"), ("2", "-2.0"), ("3", "-2.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
+            {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well8.rmswell"],
+    },
+    "6C": {
+        "n_facies": 4,
+        "facies_models": [
+            {"parent": "background", "names": "F4 F1F2F3", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2F3",     "names": "F3 F1F2",   "residual_ids": "2", "trend_ids": "2"},
+            {"parent": "F1F2",       "names": "F1 F2",     "residual_ids": "3", "trend_ids": "3"},
+        ],
+        "trends": [("1", "-1.0"), ("2", "-1.0"), ("3", "-1.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
+            {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well8.rmswell"],
+    },
+    "6D": {
+        "n_facies": 4,
+        "facies_models": [
+            {"parent": "background", "names": "F4 F1F2F3", "residual_ids": "1", "trend_ids": "1"},
+            {"parent": "F1F2F3",     "names": "F3 F1F2",   "residual_ids": "2", "trend_ids": "2"},
+            {"parent": "F1F2",       "names": "F1 F2",     "residual_ids": "3", "trend_ids": "3"},
+        ],
+        "trends": [("1", "-2.5"), ("2", "-2.5"), ("3", "-2.5")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
+            {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
+            {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
+        ],
+        "wells": ["wells/well8.rmswell"],
     },
 }
 
@@ -379,6 +466,7 @@ WELL_DATA = {
     # ── Model 5A: 10-facies, single well, F8 observation ─────────────────
     "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
     "wells/well7.rmswell": {"name": "well7", "x": 3000.0, "y": 2000.0, "facies": 4},
+    "wells/well8.rmswell": {"name": "well8", "x": 3000.0, "y": 2000.0, "facies": 2},
 }
 
 

@@ -175,7 +175,13 @@ def main():
     GREY    = "\033[90m"
     YELLOW  = "\033[33m"
     CYAN    = "\033[96m"
+    GREEN   = "\033[94m"
     RESET   = "\033[0m"
+
+    # 3 newest runs by timestamp prefix (YYMMDD_HHMMSS = first 13 chars of run_name)
+    newest_names = set(
+        n for n, _ in sorted(rows, key=lambda x: x[0][:13], reverse=True)[:1]
+    )
 
     size1_keys = {"trane_size1", "aps_size1"}
 
@@ -189,14 +195,23 @@ def main():
             return GREY + value + RESET
         if key in size1_keys:
             return YELLOW + value + RESET
+        if key is None and run_name in newest_names:
+            return GREEN + value + RESET
         if key is None and "keep" in run_name.lower():
             return CYAN + value + RESET
         return value
 
     header  = sep.join(fmt(h, w, lj) for (h, _, lj), w in zip(col_defs, widths))
     divider = sep.join("-" * w for w in widths)
-    keep_rows  = [(n, d) for n, d in rows if "keep"  in n.lower()]
-    other_rows = [(n, d) for n, d in rows if "keep" not in n.lower()]
+    def _sort_key(item):
+        run_name, data = item
+        model = data["model"]
+        mm = re.match(r"^(\d+)([A-Za-z]+)$", model)
+        model_key = (int(mm.group(1)), mm.group(2)) if mm else (999, model)
+        return (model_key, run_name)
+
+    keep_rows  = sorted([(n, d) for n, d in rows if "keep"  in n.lower()], key=_sort_key)
+    other_rows = sorted([(n, d) for n, d in rows if "keep" not in n.lower()], key=_sort_key)
 
     def print_row(run_name, data):
         cells = []
