@@ -29,6 +29,14 @@ def _parse_log(path):
         "aps_max":        "x",
         "model_config":   None,
         "n_obs":          "x",
+        "trane_conn":     "x",
+        "trane_cmean":    "x",
+        "trane_cmin":     "x",
+        "trane_cmax":     "x",
+        "aps_conn":       "x",
+        "aps_cmean":      "x",
+        "aps_cmin":       "x",
+        "aps_cmax":       "x",
     }
     try:
         with open(path, "r") as f:
@@ -115,6 +123,48 @@ def _parse_log(path):
     if well_entries:
         result["n_obs"] = str(len(well_entries))
 
+    # TRANE connection stats
+    m = re.search(
+        r"Connections for TRANE \[[^\]]+\] \(n=(\d+)\):\n"
+        r"\s+Connected:\s+(\d+)\s*/",
+        text,
+    )
+    if m:
+        result["trane_conn"] = f"{m.group(2)}/{m.group(1)}"
+    m = re.search(
+        r"Connections for TRANE \[[^\]]+\] \(n=\d+\):\n"
+        r"\s+Connected:.*\n"
+        r"\s+Mean:\s+([\d.]+)\n"
+        r"\s+Min:\s+(\d+)\n"
+        r"\s+Max:\s+(\d+)",
+        text,
+    )
+    if m:
+        result["trane_cmean"] = m.group(1)
+        result["trane_cmin"]  = m.group(2)
+        result["trane_cmax"]  = m.group(3)
+
+    # APS connection stats
+    m = re.search(
+        r"Connections for APS \[[^\]]+\] \(n=(\d+)\):\n"
+        r"\s+Connected:\s+(\d+)\s*/",
+        text,
+    )
+    if m:
+        result["aps_conn"] = f"{m.group(2)}/{m.group(1)}"
+    m = re.search(
+        r"Connections for APS \[[^\]]+\] \(n=\d+\):\n"
+        r"\s+Connected:.*\n"
+        r"\s+Mean:\s+([\d.]+)\n"
+        r"\s+Min:\s+(\d+)\n"
+        r"\s+Max:\s+(\d+)",
+        text,
+    )
+    if m:
+        result["aps_cmean"] = m.group(1)
+        result["aps_cmin"]  = m.group(2)
+        result["aps_cmax"]  = m.group(3)
+
     return result
 
 
@@ -142,7 +192,7 @@ def main():
         rows.append((run_name, data))
 
     # (header, data-key or None for run name, left-justify?)
-    col_defs = [
+    base_col_defs = [
         ("Run",       None,            True),
         ("Model",     "model",         False),
         ("n_obs",     "n_obs",         False),
@@ -159,6 +209,20 @@ def main():
         ("A min",     "aps_min",       False),
         ("T max",     "trane_max",     False),
         ("A max",     "aps_max",       False),
+    ]
+    conn_col_candidates = [
+        ("T conn",    "trane_conn",    False),
+        ("T cmean",   "trane_cmean",   False),
+        ("T cmin",    "trane_cmin",    False),
+        ("T cmax",    "trane_cmax",    False),
+        ("A conn",    "aps_conn",      False),
+        ("A cmean",   "aps_cmean",     False),
+        ("A cmin",    "aps_cmin",      False),
+        ("A cmax",    "aps_cmax",      False),
+    ]
+    col_defs = base_col_defs + [
+        cd for cd in conn_col_candidates
+        if any(data[cd[1]] != "x" for _, data in rows)
     ]
 
     # Compute column widths from headers and all row values

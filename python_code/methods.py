@@ -218,6 +218,17 @@ MODEL_CONFIGS = {
         ],
         "wells": ["wells/well2B.rmswell"],
     },
+    "1Ib": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 4000.0, "subrange": 2500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell", "wells/well_1Ib_1.rmswell"],
+    },
     "1J": {
         "n_facies": 3,
         "facies_models": [
@@ -507,6 +518,8 @@ WELL_DATA = {
     "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
     "wells/well7.rmswell": {"name": "well7", "x": 3000.0, "y": 2000.0, "facies": 4},
     "wells/well8.rmswell": {"name": "well8", "x": 3000.0, "y": 2000.0, "facies": 2},
+    # ── Model 1Ib: second observation 1000m to the right of well2B ──
+    "wells/well_1Ib_1.rmswell": {"name": "well_1Ib_1", "x": 4000.0, "y": 2000.0, "facies": 2},
     # ── Model 1M: 5 observations spread across grid, all facies=2 (like 1F) ──
     "wells/well_1M_0.rmswell": {"name": "well_1M_0", "x": 3000.0, "y": 2000.0, "facies": 2},
     "wells/well_1M_1.rmswell": {"name": "well_1M_1", "x": 1000.0, "y": 1000.0, "facies": 2},
@@ -953,14 +966,42 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
         print(f"{CYAN}  [timing] {prefix + ' save_threshold_grids_as_png:':<42} {time.time()-_t:6.2f}s{RESET}")
 
-    if model_number[0] != "0":
+    wells_cfg = MODEL_CONFIGS[model_number]["wells"]
+    if len(wells_cfg) >= 2:
+        wd0 = WELL_DATA[wells_cfg[0]]
+        wd1 = WELL_DATA[wells_cfg[1]]
         _t = time.time()
-        count_connected = count_connected_grid_nodes(z, parameters, 3000.0, 2000.0, [3500, 2000])
+        count_connected = count_connected_grid_nodes(
+            z, parameters, wd0["x"], wd0["y"], [wd1["x"], wd1["y"]]
+        )
         print(f"{CYAN}  [timing] {prefix + ' count_connected_grid_nodes:':<42} {time.time()-_t:6.2f}s{RESET}")
-        sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
         count_connected_filtered = [c for c in count_connected if c != -1]
+        n_total  = len(count_connected)
+        n_conn   = len(count_connected_filtered)
+        pct_conn = 100.0 * n_conn / n_total if n_total > 0 else 0.0
+        conn_mean = statistics.mean(count_connected_filtered) if count_connected_filtered else None
+        conn_min  = min(count_connected_filtered) if count_connected_filtered else None
+        conn_max  = max(count_connected_filtered) if count_connected_filtered else None
+        conn_lines = [
+            f"Connections for {prefix} [{wd0['name']} -> {wd1['name']}] (n={n_total}):",
+            f"  Connected: {n_conn:5d} / {n_total}  ({pct_conn:5.1f}%)",
+        ]
+        if conn_mean is not None:
+            conn_lines += [
+                f"  Mean:   {conn_mean:.2f}",
+                f"  Min:    {conn_min}",
+                f"  Max:    {conn_max}",
+            ]
         if verbose:
+            sum_connected = [dx * dy * n if n != -1 else -1 for n in count_connected]
             _print_results(sum_connected, count_connected, count_connected_filtered, dx, dy)
+        print()
+        for line in conn_lines:
+            print(line)
+        if log_file:
+            with open(log_file, 'a') as _lf:
+                _lf.write("\n")
+                _lf.write("\n".join(conn_lines) + "\n")
     else:
         count_connected_filtered = []
 
