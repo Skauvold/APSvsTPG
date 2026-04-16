@@ -744,48 +744,25 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
     return out_z, parameters
 
 def _run_aps_single(iteration, v1, v2, nx, ny, dx, dy, t1, t2, model_family, thresholds=None, v3=None, t3=None):
+    _t_single = time.time()
     s1 = simulate_gaussian_field(v1, nx, dx, ny, dy, seed=iteration)
     s2 = simulate_gaussian_field(v2, nx, dx, ny, dy, seed=iteration) if v2 is not None else None
     s3 = simulate_gaussian_field(v3, nx, dx, ny, dy, seed=iteration) if v3 is not None else None
-    z = np.ndarray(s1.shape)
-    for i in range(nx):
-        for j in range(ny):
-            if model_family == "0":
-                z[i][j] = 1 if s1[i][j] < t1[i][j] else 2
-            elif model_family == "1":
-                if s1[i][j] < t1[i][j]:
-                    z[i][j] = 1
-                elif s1[i][j] < t2[i][j]:
-                    z[i][j] = 2
-                else:
-                    z[i][j] = 3
-            elif model_family == "5":
-                # thresholds is a list of n_facies-1 arrays, each (nx, ny)
-                val = s1[i][j]
-                assigned = len(thresholds) + 1  # default: last facies
-                for k, tk in enumerate(thresholds):
-                    if val < tk[i][j]:
-                        assigned = k + 1
-                        break
-                z[i][j] = assigned
-            elif model_family == "6":
-                # 3-level hierarchy: Background→F4|F1F2F3 → F3|F1F2 → F1|F2
-                if s1[i][j] < t1[i][j]:
-                    z[i][j] = 4  # F4
-                elif s2[i][j] < t2[i][j]:
-                    z[i][j] = 3  # F3
-                elif s3[i][j] < t3[i][j]:
-                    z[i][j] = 1  # F1
-                else:
-                    z[i][j] = 2  # F2
-            else:
-                if s1[i][j] < t1[i][j]:
-                    z[i][j] = 3
-                elif s2[i][j] < t2[i][j]:
-                    z[i][j] = 1
-                else:
-                    z[i][j] = 2
-    return iteration, z
+    if model_family == "0":
+        z = np.where(s1 < t1, 1, 2)
+    elif model_family == "1":
+        z = np.where(s1 < t1, 1, np.where(s1 < t2, 2, 3))
+    elif model_family == "5":
+        # Apply thresholds from last to first so earlier ones win
+        z = np.full(s1.shape, len(thresholds) + 1, dtype=np.int8)
+        for k in range(len(thresholds) - 1, -1, -1):
+            z = np.where(s1 < thresholds[k], k + 1, z)
+    elif model_family == "6":
+        # 3-level hierarchy: Background→F4|F1F2F3 → F3|F1F2 → F1|F2
+        z = np.where(s1 < t1, 4, np.where(s2 < t2, 3, np.where(s3 < t3, 1, 2)))
+    else:
+        z = np.where(s1 < t1, 3, np.where(s2 < t2, 1, 2))
+    return iteration, z, time.time() - _t_single
 
 
 def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=False, data_dir=".", n_workers=4):
@@ -820,37 +797,33 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
     if n_facies > 3:
         p_all = [np.load(os.path.join(data_dir, f"p{k}_from_TRANE.npy")) for k in range(1, n_facies + 1)]
 
-    # Calculate thresholds
-    t1 = np.zeros((nx, ny))
-    t2 = np.zeros((nx, ny))
-    t3 = np.zeros((nx, ny))
-    thresholds_5 = None  # list of (n_facies-1) threshold arrays for model family "5"
-    for i in range(0, nx):
-        for j in range(0, ny):
-            if model_number[0] == "0":
-                t1[i][j] = norm.ppf(p_F1[i][j])
-            elif model_number[0] == "1":
-                t1[i][j] = norm.ppf(p_F1[i][j])
-                p1_p2 = min(1.0, p_F1[i][j] + p_F2[i][j])
-                t2[i][j] = norm.ppf(p1_p2)
-            elif model_number[0] in ("2", "3", "4"):
-                t1[i][j] = norm.ppf(p_F3[i][j])
-                t2[i][j] = norm.ppf(min(1.0, p_F1[i][j] / (1.0 - p_F3[i][j])))
-            elif model_number[0] == "6":
-                # Background→F4|F1F2F3: t1 cuts off F4 probability
-                t1[i][j] = norm.ppf(np.clip(p_all[3][i][j], 1e-9, 1.0 - 1e-9))
-                # F1F2F3→F3|F1F2: t2 cuts off F3 conditional on not-F4
-                p_not_f4 = max(1e-9, 1.0 - p_all[3][i][j])
-                t2[i][j] = norm.ppf(np.clip(p_all[2][i][j] / p_not_f4, 1e-9, 1.0 - 1e-9))
-                # F1F2→F1|F2: t3 cuts off F1 conditional on being in F1F2
-                p_f1f2 = max(1e-9, p_all[0][i][j] + p_all[1][i][j])
-                t3[i][j] = norm.ppf(np.clip(p_all[0][i][j] / p_f1f2, 1e-9, 1.0 - 1e-9))
-    if model_number[0] == "5":
-        # Build n_facies-1 cumulative threshold arrays from cumulative probabilities
+    # Calculate thresholds (vectorized)
+    thresholds_5 = None
+    if model_number[0] == "0":
+        t1 = norm.ppf(np.clip(p_F1, 1e-9, 1.0 - 1e-9))
+        t2 = t3 = np.zeros((nx, ny))
+    elif model_number[0] == "1":
+        t1 = norm.ppf(np.clip(p_F1, 1e-9, 1.0 - 1e-9))
+        t2 = norm.ppf(np.clip(p_F1 + p_F2, 1e-9, 1.0 - 1e-9))
+        t3 = np.zeros((nx, ny))
+    elif model_number[0] in ("2", "3", "4"):
+        t1 = norm.ppf(np.clip(p_F3, 1e-9, 1.0 - 1e-9))
+        t2 = norm.ppf(np.clip(p_F1 / np.maximum(1e-9, 1.0 - p_F3), 1e-9, 1.0 - 1e-9))
+        t3 = np.zeros((nx, ny))
+    elif model_number[0] == "5":
+        t1 = t2 = t3 = np.zeros((nx, ny))
         thresholds_5 = []
-        for k in range(1, n_facies):  # k = 1 .. n_facies-1
-            cum_p = np.clip(sum(p_all[:k]), 0.0, 1.0 - 1e-9)
+        for k in range(1, n_facies):
+            cum_p = np.clip(sum(p_all[:k]), 1e-9, 1.0 - 1e-9)
             thresholds_5.append(norm.ppf(cum_p))
+    elif model_number[0] == "6":
+        p_not_f4 = np.maximum(1e-9, 1.0 - p_all[3])
+        p_f1f2   = np.maximum(1e-9, p_all[0] + p_all[1])
+        t1 = norm.ppf(np.clip(p_all[3],              1e-9, 1.0 - 1e-9))
+        t2 = norm.ppf(np.clip(p_all[2] / p_not_f4,  1e-9, 1.0 - 1e-9))
+        t3 = norm.ppf(np.clip(p_all[0] / p_f1f2,    1e-9, 1.0 - 1e-9))
+    else:
+        t1 = t2 = t3 = np.zeros((nx, ny))
 
     v1 = GeneralExponentialVariogram(v1_range_x, v1_range_y, v1_range_z, azi=v1_azimuth, power=v1_genexp_power)
     v2 = None
@@ -862,23 +835,30 @@ def run_APS_simulations(n_simulations, nx, ny, dx, dy, model_number, print_info=
 
     out_z = [None] * n_simulations
     completed = [0]
+    iter_times = []
     if print_info:
         _print_progress_bar(0, n_simulations, prefix="Progress")
 
+    _t_aps_start = time.time()
     with ThreadPoolExecutor(max_workers=n_workers) as executor:
         futures = {
             executor.submit(_run_aps_single, i, v1, v2, nx, ny, dx, dy, t1, t2, model_number[0], thresholds_5, v3, t3): i
             for i in range(n_simulations)
         }
         for future in as_completed(futures):
-            iteration, z = future.result()
+            iteration, z, _elapsed = future.result()
+            iter_times.append(_elapsed)
             out_z[iteration] = z
             completed[0] += 1
             if print_info:
                 _print_progress_bar(completed[0], n_simulations, prefix="Progress")
 
+    _t_aps_total = time.time() - _t_aps_start
     if print_info:
         print()
+    CYAN  = "\033[36m"
+    RESET = "\033[0m"
+    print(f"{CYAN}  [APS timing] total: {_t_aps_total:.2f}s  per-realization (median): {statistics.median(iter_times):.3f}s  mean: {statistics.mean(iter_times):.3f}s{RESET}")
     return out_z
 
 
