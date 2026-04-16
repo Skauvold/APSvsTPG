@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 
 from methods import (run_TRANE_simulations, run_APS_simulations,
-                     plot_histogram_of_connected_cells,
+                     plot_histogram_of_connected_cells, compare_prob_maps,
                      _analyse, _print_header, _save, _load,
                      MODEL_CONFIGS, WELL_DATA)
 
@@ -15,7 +15,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODELS = ["1N"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 10
+n_sim = 200
 use_existing_results = False
 
 RUN_TRANE = True
@@ -23,7 +23,7 @@ RUN_APS = True
 verbose = True
 verbose_trane = False
 plot_histograms = True
-n_workers = 5  # parallel workers for TRANE and APS simulations
+n_workers = 14  # parallel workers for TRANE and APS simulations
 max_facies_grid_exports = 200  # max facies grid images saved per method (None = all)
 save_pickles = False  # save z_TRANE / z_APS / parameters as pickle files
 
@@ -161,6 +161,12 @@ for MODEL in MODELS:
         _t0 = time.time()
         count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
             max_facies_grid_exports=max_facies_grid_exports, output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
+
+    # ============================================================
+    # Probability map sanity check
+    # ============================================================
+    if RUN_TRANE and RUN_APS:
+        compare_prob_maps(MODEL, path_pickle_trane, path_pickle_aps, log_file=_log_file)
 
     # ============================================================
     # Histograms

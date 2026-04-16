@@ -37,6 +37,8 @@ def _parse_log(path):
         "aps_cmean":      "x",
         "aps_cmin":       "x",
         "aps_cmax":       "x",
+        "prob_max_diff":  "x",
+        "prob_avg_diff":  "x",
     }
     try:
         with open(path, "r") as f:
@@ -167,6 +169,14 @@ def _parse_log(path):
         result["aps_cmin"]  = m.group(2)
         result["aps_cmax"]  = m.group(3)
 
+    # Probability map max|diff| and avg|diff| — take the largest across all facies rows
+    diffs = re.findall(r"^\s+F\d+\s+(\d+\.\d+)\s+", text, re.MULTILINE)
+    if diffs:
+        result["prob_max_diff"] = f"{max(float(v) for v in diffs):.5f}"
+    avg_diffs = re.findall(r"^\s+F\d+\s+\d+\.\d+\s+(\d+\.\d+)", text, re.MULTILINE)
+    if avg_diffs:
+        result["prob_avg_diff"] = f"{max(float(v) for v in avg_diffs):.5f}"
+
     return result
 
 
@@ -221,6 +231,8 @@ def main():
         ("A cmin",    "aps_cmin",      False),
         ("T cmax",    "trane_cmax",    False),
         ("A cmax",    "aps_cmax",      False),
+        ("p max|d|",  "prob_max_diff", False),
+        ("p avg|d|",  "prob_avg_diff", False),
     ]
     col_defs = base_col_defs + conn_col_candidates
 

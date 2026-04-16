@@ -1261,6 +1261,32 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
         plt.savefig(os.path.join(output_dir, prefix + '_p' + str(i+1) + '_n' + str(len(facies_grids)) + '.png'), dpi=100)
         plt.close()
 
+def compare_prob_maps(model_number, trane_data_dir, aps_data_dir, log_file=None):
+    """Compare TRANE vs APS probability maps. Prints and logs max|diff| and mean|diff| per facies."""
+    CYAN  = "\033[36m"
+    RESET = "\033[0m"
+    n_facies = MODEL_CONFIGS[model_number]["n_facies"]
+    header = "Probability map sanity check (TRANE vs APS):"
+    col_header = f"  {'Facies':<8} {'max|diff|':>12} {'mean|diff|':>12}"
+    lines = [header, col_header]
+    print(f"\n{CYAN}{header}")
+    print(col_header)
+    for k in range(1, n_facies + 1):
+        p_trane = np.load(os.path.join(trane_data_dir, f"p{k}_from_TRANE.npy"))
+        p_aps   = np.load(os.path.join(aps_data_dir,   f"p{k}_from_APS.npy"))
+        diff      = np.abs(p_trane - p_aps)
+        max_diff  = float(np.max(diff))
+        mean_diff = float(np.mean(diff))
+        line = f"  {'F' + str(k):<8} {max_diff:>12.5f} {mean_diff:>12.5f}"
+        lines.append(line)
+        print(line)
+    print(RESET, end="")
+    if log_file:
+        with open(log_file, 'a') as _f:
+            _f.write("\n")
+            _f.write("\n".join(lines) + "\n")
+
+
 def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
     fig, ax1 = plt.subplots(figsize=(15, 10))
     binwidth = xmax / n_bins
