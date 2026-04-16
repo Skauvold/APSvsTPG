@@ -1077,10 +1077,13 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
             ax.vlines(x_grid, 0, y_length, colors='black', linewidths=0.2, alpha=0.4)
             ax.hlines(y_grid, 0, x_length, colors='black', linewidths=0.2, alpha=0.4)
             for wx, wy in zip(well_x, well_y):
+                cell_x = math.floor(wx / dx) * dx
+                cell_y = math.floor(wy / dy) * dy
                 ax.add_patch(patches.Rectangle(
-                    (wx - dx/2, wy - dy/2), dx, dy,
+                    (cell_x, cell_y), dx, dy,
                     linewidth=0.5, edgecolor='black', facecolor='none'
                 ))
+                ax.plot(wx, wy, marker='.', color='black', markersize=0.3, linewidth=0.0)
             plt.savefig(os.path.join(folder, prefix + '_it' + str(iteration) + '.png'), dpi=100)
             plt.close()
    
