@@ -1042,12 +1042,12 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
     dy = parameters[1]
     x_length = parameters[2]
     y_length = parameters[3]
-    x_min = 0.0
-    x_max = dx * nx
-    y_min = 0.0
-    y_max = dy * ny
     well_x = [WELL_DATA[wp]["x"] for wp in MODEL_CONFIGS[model_number]["wells"]]
     well_y = [WELL_DATA[wp]["y"] for wp in MODEL_CONFIGS[model_number]["wells"]]
+    x_min = 0.0
+    x_max = x_length
+    y_min = 0.0
+    y_max = y_length
     extent = x_min, x_max, y_min, y_max
 
     folder = os.path.join(output_dir, "facies_grids_" + prefix)
@@ -1072,6 +1072,10 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
             fig.add_axes(ax)
             # img = plt.imshow(z_simbox, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
             img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
+            x_grid = np.linspace(0, x_length, nx + 1)
+            y_grid = np.linspace(0, y_length, ny + 1)
+            ax.vlines(x_grid, 0, y_length, colors='black', linewidths=0.2, alpha=0.4)
+            ax.hlines(y_grid, 0, x_length, colors='black', linewidths=0.2, alpha=0.4)
             for wx, wy in zip(well_x, well_y):
                 ax.add_patch(patches.Rectangle(
                     (wx - dx/2, wy - dy/2), dx, dy,
@@ -1164,9 +1168,9 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
     x_length = parameters[2]
     y_length = parameters[3]
     x_min = 0.0
-    x_max = dx * nx
+    x_max = x_length
     y_min = 0.0
-    y_max = dy * ny
+    y_max = y_length
     extent = x_min, x_max, y_min, y_max
 
     n_facies = MODEL_CONFIGS[model_number]["n_facies"]
@@ -1247,9 +1251,9 @@ def save_threshold_grids_as_png(parameters, model_number, output_dir=".", data_d
     x_length = parameters[2]
     y_length = parameters[3]
     x_min = 0.0
-    x_max = dx * nx
+    x_max = x_length
     y_min = 0.0
-    y_max = dy * ny
+    y_max = y_length
     extent = x_min, x_max, y_min, y_max
 
     # Build n_facies-1 cumulative threshold arrays
