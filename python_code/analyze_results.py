@@ -39,6 +39,8 @@ def _parse_log(path):
         "aps_cmax":       "x",
         "prob_max_diff":  "x",
         "prob_avg_diff":  "x",
+        "trane_pmean":    "x",
+        "aps_pmean":      "x",
     }
     try:
         with open(path, "r") as f:
@@ -177,6 +179,22 @@ def _parse_log(path):
     if avg_diffs:
         result["prob_avg_diff"] = f"{max(float(v) for v in avg_diffs):.5f}"
 
+    # Path length mean (mean of connected-only path lengths)
+    m = re.search(
+        r"Path lengths for TRANE \[[^\]]+\] \(n_connected=\d+\):\n"
+        r"\s+Mean:\s+([\d.]+)",
+        text,
+    )
+    if m:
+        result["trane_pmean"] = m.group(1)
+    m = re.search(
+        r"Path lengths for APS \[[^\]]+\] \(n_connected=\d+\):\n"
+        r"\s+Mean:\s+([\d.]+)",
+        text,
+    )
+    if m:
+        result["aps_pmean"] = m.group(1)
+
     return result
 
 
@@ -233,6 +251,8 @@ def main():
         ("A cmax",    "aps_cmax",      False),
         ("p max|d|",  "prob_max_diff", False),
         ("p avg|d|",  "prob_avg_diff", False),
+        ("T pmean",   "trane_pmean",   False),
+        ("A pmean",   "aps_pmean",     False),
     ]
     col_defs = base_col_defs + conn_col_candidates
 

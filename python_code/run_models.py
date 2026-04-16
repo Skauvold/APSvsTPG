@@ -15,7 +15,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODELS = ["1N"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 200
+n_sim = 20
 use_existing_results = False
 
 RUN_TRANE = True
@@ -98,6 +98,8 @@ for MODEL in MODELS:
 
     trane_well_data = []
     aps_well_data = []
+    path_lengths_TRANE = []
+    path_lengths_APS = []
 
     # Clear TRANE_models_autocreated before running
     if False and not use_existing_results and os.path.exists(temp_project_dir):
@@ -130,7 +132,7 @@ for MODEL in MODELS:
         dy = parameters[1]
 
         _t0 = time.time()
-        count_connected_filtered_TRANE, trane_well_data = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
+        count_connected_filtered_TRANE, trane_well_data, path_lengths_TRANE = _analyse(z_TRANE, parameters, 'TRANE', dx, dy, verbose, MODEL,
             max_facies_grid_exports=max_facies_grid_exports, save_thresholds=True, output_dir=path_output_trane, data_dir=path_pickle_trane, log_file=_log_file)
 
     if RUN_APS:
@@ -159,7 +161,7 @@ for MODEL in MODELS:
             z_APS = _load(_load_pickle_aps, "z_APS")
 
         _t0 = time.time()
-        count_connected_filtered_APS, aps_well_data = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
+        count_connected_filtered_APS, aps_well_data, path_lengths_APS = _analyse(z_APS, parameters, 'APS', dx, dy, verbose, MODEL,
             max_facies_grid_exports=max_facies_grid_exports, output_dir=path_output_aps, data_dir=path_pickle_aps, log_file=_log_file)
 
     # ============================================================
@@ -219,6 +221,29 @@ for MODEL in MODELS:
                 output_dir=path_output_trane)
             plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, _ymax_tp, _n_bins_tp,
                 output_dir=path_output_aps)
+
+    # Path length histograms
+    if plot_histograms and RUN_TRANE and RUN_APS:
+        all_path_lengths = path_lengths_TRANE + path_lengths_APS
+        if all_path_lengths:
+            _xmax_pl = max(all_path_lengths) * 1.02
+            _n_bins_pl = min(_n_bins, 100)
+            _binwidth_pl = _xmax_pl / _n_bins_pl
+            _bin_edges_pl = [i * _binwidth_pl for i in range(_n_bins_pl + 1)]
+            _ymax_pl = 0.0
+            for _pl in [path_lengths_TRANE, path_lengths_APS]:
+                n_pl = len(_pl)
+                if n_pl > 0:
+                    for _b in range(_n_bins_pl):
+                        _bc = sum(1 for v in _pl if _bin_edges_pl[_b] <= v < _bin_edges_pl[_b + 1])
+                        _bp = _bc / n_pl
+                        if _bp > _ymax_pl:
+                            _ymax_pl = _bp
+            _ymax_pl = _ymax_pl * 1.1
+            plot_histogram_of_connected_cells(path_lengths_TRANE, 'TRANE', 0.0, _xmax_pl, 0.0, _ymax_pl, _n_bins_pl,
+                output_dir=path_output_trane, xlabel='Shortest path length (m)', filename_tag='pathlength')
+            plot_histogram_of_connected_cells(path_lengths_APS, 'APS', 0.0, _xmax_pl, 0.0, _ymax_pl, _n_bins_pl,
+                output_dir=path_output_aps, xlabel='Shortest path length (m)', filename_tag='pathlength')
 
 
 

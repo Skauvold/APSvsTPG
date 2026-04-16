@@ -946,8 +946,9 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
     else:
         save_indices = set(range(max_facies_grid_exports))
 
-    # Compute shortest connection paths (only for saved iterations, to avoid excess computation)
+    # Compute shortest connection paths (saved iterations for plot; all iterations for length stats)
     _connection_paths = None
+    path_lengths = []
     _wells_cfg = MODEL_CONFIGS[model_number]["wells"]
     if len(_wells_cfg) >= 2:
         _wd0 = WELL_DATA[_wells_cfg[0]]
@@ -961,8 +962,14 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         _t = time.time()
         _connection_paths = [None] * n_sim
         for _it, z_i in enumerate(z):
+            _p = _find_shortest_path(z_i, _nx, _ny, dx, dy, _x1_ind, _y1_ind, _x2_ind, _y2_ind)
             if save_indices == "all" or _it in save_indices:
-                _connection_paths[_it] = _find_shortest_path(z_i, _nx, _ny, dx, dy, _x1_ind, _y1_ind, _x2_ind, _y2_ind)
+                _connection_paths[_it] = _p
+            if _p is not None:
+                path_lengths.append(sum(
+                    math.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
+                    for p1, p2 in zip(_p, _p[1:])
+                ))
         print(f"{CYAN}  [timing] {prefix + ' find_shortest_paths:':<42} {time.time()-_t:6.2f}s{RESET}")
 
     _t = time.time()
@@ -1014,6 +1021,26 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
             with open(log_file, 'a') as _lf:
                 _lf.write("\n")
                 _lf.write("\n".join(conn_lines) + "\n")
+        # Path length stats
+        if path_lengths:
+            pl_mean  = statistics.mean(path_lengths)
+            pl_stdev = statistics.stdev(path_lengths) if len(path_lengths) >= 2 else None
+            pl_min   = min(path_lengths)
+            pl_max   = max(path_lengths)
+            pl_lines = [
+                f"Path lengths for {prefix} [{wd0['name']} -> {wd1['name']}] (n_connected={len(path_lengths)}):",
+                f"  Mean:   {pl_mean:.2f}",
+            ]
+            if pl_stdev is not None:
+                pl_lines.append(f"  Stdev:  {pl_stdev:.2f}")
+            pl_lines += [f"  Min:    {pl_min:.2f}", f"  Max:    {pl_max:.2f}"]
+            print()
+            for line in pl_lines:
+                print(line)
+            if log_file:
+                with open(log_file, 'a') as _lf:
+                    _lf.write("\n")
+                    _lf.write("\n".join(pl_lines) + "\n")
     else:
         count_connected_filtered = []
 
@@ -1037,7 +1064,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
                 _lf.write("\n".join(all_lines) + "\n")
 
     print(f"{CYAN}  [timing] {prefix + ' _analyse total:':<42} {time.time()-_t0:6.2f}s{RESET}")
-    return count_connected_filtered, well_plot_data
+    return count_connected_filtered, well_plot_data, path_lengths
 
 
 def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir=".", connection_paths=None):
@@ -1287,13 +1314,13 @@ def compare_prob_maps(model_number, trane_data_dir, aps_data_dir, log_file=None)
             _f.write("\n".join(lines) + "\n")
 
 
-def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
+def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir=".", xlabel='Connected grid nodes', filename_tag='connectedvolume'):
     fig, ax1 = plt.subplots(figsize=(15, 10))
     binwidth = xmax / n_bins
     weights = np.ones(len(sum_connected)) / len(sum_connected) if sum_connected else np.array([])
     ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue', weights=weights)
     ax1.set_ylabel('Proportion')
-    ax1.set_xlabel('Connected grid nodes')
+    ax1.set_xlabel(xlabel)
     ax1.set_xlim(xmin, xmax)
     ax1.set_ylim(ymin, ymax)
 
@@ -1307,7 +1334,7 @@ def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, y
         ax2.set_ylabel('CDF')
         ax2.set_ylim(0.0, 1.0)
 
-    plt.savefig(os.path.join(output_dir, prefix + '_connectedvolume' + '_n' + str(len(sum_connected)) + '.png'), dpi=100, bbox_inches='tight', pad_inches=0.3)
+    plt.savefig(os.path.join(output_dir, prefix + '_' + filename_tag + '_n' + str(len(sum_connected)) + '.png'), dpi=100, bbox_inches='tight', pad_inches=0.3)
     plt.close()
 
 def calculate_volume_fractions(facies_grids):
