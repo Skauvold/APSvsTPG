@@ -1071,7 +1071,7 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
             ax.set_axis_off()
             fig.add_axes(ax)
             # img = plt.imshow(z_simbox, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
-            img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent) # interpolation ='bilinear'
+            img = plt.imshow(z_for_plotting, cmap = cmap, alpha = 1.0, interpolation='none', extent = extent, vmin=0.5, vmax=n_facies + 0.5) # interpolation ='bilinear'
             x_grid = np.linspace(0, x_length, nx + 1)
             y_grid = np.linspace(0, y_length, ny + 1)
             ax.vlines(x_grid, 0, y_length, colors='black', linewidths=0.2, alpha=0.4)
