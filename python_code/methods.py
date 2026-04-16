@@ -1209,8 +1209,9 @@ def calculate_and_save_facies_prob_maps(facies_grids, parameters, prefix, model_
 def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir="."):
     fig, ax1 = plt.subplots(figsize=(15, 10))
     binwidth = xmax / n_bins
-    ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue')
-    ax1.set_ylabel('Count')
+    weights = np.ones(len(sum_connected)) / len(sum_connected) if sum_connected else np.array([])
+    ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue', weights=weights)
+    ax1.set_ylabel('Proportion')
     ax1.set_xlabel('Connected grid nodes')
     ax1.set_xlim(xmin, xmax)
     ax1.set_ylim(ymin, ymax)
