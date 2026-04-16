@@ -946,8 +946,27 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
     else:
         save_indices = set(range(max_facies_grid_exports))
 
+    # Compute shortest connection paths (only for saved iterations, to avoid excess computation)
+    _connection_paths = None
+    _wells_cfg = MODEL_CONFIGS[model_number]["wells"]
+    if len(_wells_cfg) >= 2:
+        _wd0 = WELL_DATA[_wells_cfg[0]]
+        _wd1 = WELL_DATA[_wells_cfg[1]]
+        _nx = z[0].shape[0]
+        _ny = z[0].shape[1]
+        _x1_ind = math.floor(_wd0["x"] / dx)
+        _y1_ind = math.floor(_wd0["y"] / dy)
+        _x2_ind = math.floor(_wd1["x"] / dx)
+        _y2_ind = math.floor(_wd1["y"] / dy)
+        _t = time.time()
+        _connection_paths = [None] * n_sim
+        for _it, z_i in enumerate(z):
+            if save_indices == "all" or _it in save_indices:
+                _connection_paths[_it] = _find_shortest_path(z_i, _nx, _ny, dx, dy, _x1_ind, _y1_ind, _x2_ind, _y2_ind)
+        print(f"{CYAN}  [timing] {prefix + ' find_shortest_paths:':<42} {time.time()-_t:6.2f}s{RESET}")
+
     _t = time.time()
-    save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir)
+    save_facies_grids_as_png(z, parameters, prefix, model_number, save_indices, output_dir=output_dir, connection_paths=_connection_paths)
     print(f"{CYAN}  [timing] {prefix + ' save_facies_grids_as_png:':<42} {time.time()-_t:6.2f}s{RESET}")
 
     _t = time.time()
@@ -1021,7 +1040,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
     return count_connected_filtered, well_plot_data
 
 
-def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir="."):
+def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, indices_to_save="all", output_dir=".", connection_paths=None):
     _FACIES_COLORS = [
         (255/255,  69/255,   0/255),   # F1  Orange-Red
         ( 75/255,   0/255, 130/255),   # F2  Indigo
@@ -1084,6 +1103,12 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
                     linewidth=0.5, edgecolor='black', facecolor='none'
                 ))
                 ax.plot(wx, wy, marker='.', color='black', markersize=0.3, linewidth=0.0)
+            if connection_paths is not None and connection_paths[iteration] is not None:
+                path = connection_paths[iteration]
+                path_x = [p[0] for p in path]
+                path_y = [p[1] for p in path]
+                ax.plot(path_x, path_y, color='white', linewidth=0.75, alpha=0.6,
+                        solid_capstyle='round', solid_joinstyle='round')
             plt.savefig(os.path.join(folder, prefix + '_it' + str(iteration) + '.png'), dpi=100)
             plt.close()
    
@@ -1138,6 +1163,36 @@ def count_connected_grid_nodes(facies_grids, parameters, x_observation, y_observ
             else:
                 count_connected.append(-1)
     return count_connected
+
+
+def _find_shortest_path(z, nx, ny, dx, dy, x1_ind, y1_ind, x2_ind, y2_ind):
+    """BFS shortest path through same-facies cells from (x1_ind,y1_ind) to (x2_ind,y2_ind).
+    Returns list of world (x,y) coordinates (cell centres) or None if not connected."""
+    if z[x1_ind][y1_ind] != z[x2_ind][y2_ind]:
+        return None
+    facies = z[x1_ind][y1_ind]
+    parent = {(x1_ind, y1_ind): None}
+    queue = [(x1_ind, y1_ind)]
+    head = 0
+    found = False
+    while head < len(queue):
+        xi, yi = queue[head]; head += 1
+        if xi == x2_ind and yi == y2_ind:
+            found = True
+            break
+        for xn, yn in ((xi+1,yi),(xi-1,yi),(xi,yi+1),(xi,yi-1)):
+            if 0 <= xn < nx and 0 <= yn < ny and z[xn][yn] == facies and (xn,yn) not in parent:
+                parent[(xn,yn)] = (xi,yi)
+                queue.append((xn,yn))
+    if not found:
+        return None
+    path = []
+    cur = (x2_ind, y2_ind)
+    while cur is not None:
+        path.append(cur)
+        cur = parent[cur]
+    path.reverse()
+    return [(xi * dx + dx * 0.5, yi * dy + dy * 0.5) for xi, yi in path]
 
 
 def count_connected_nodes_from_point(facies_grids, parameters, x_obs, y_obs):
