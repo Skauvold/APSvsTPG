@@ -130,7 +130,8 @@ def _parse_log(path):
         text,
     )
     if m:
-        result["trane_conn"] = f"{m.group(2)}/{m.group(1)}"
+        _pct = 100.0 * int(m.group(2)) / int(m.group(1)) if int(m.group(1)) > 0 else 0.0
+        result["trane_conn"] = f"{_pct:.1f} %"
     m = re.search(
         r"Connections for TRANE \[[^\]]+\] \(n=\d+\):\n"
         r"\s+Connected:.*\n"
@@ -151,7 +152,8 @@ def _parse_log(path):
         text,
     )
     if m:
-        result["aps_conn"] = f"{m.group(2)}/{m.group(1)}"
+        _pct = 100.0 * int(m.group(2)) / int(m.group(1)) if int(m.group(1)) > 0 else 0.0
+        result["aps_conn"] = f"{_pct:.1f} %"
     m = re.search(
         r"Connections for APS \[[^\]]+\] \(n=\d+\):\n"
         r"\s+Connected:.*\n"

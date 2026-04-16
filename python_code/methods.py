@@ -277,6 +277,17 @@ MODEL_CONFIGS = {
             "wells/well_1M_3.rmswell", "wells/well_1M_4.rmswell",
         ],
     },
+    "1N": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well2B.rmswell", "wells/well_1N_1.rmswell"],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -520,6 +531,8 @@ WELL_DATA = {
     "wells/well8.rmswell": {"name": "well8", "x": 3000.0, "y": 2000.0, "facies": 2},
     # ── Model 1Ib: second observation 1000m to the right of well2B ──
     "wells/well_1Ib_1.rmswell": {"name": "well_1Ib_1", "x": 4000.0, "y": 2000.0, "facies": 2},
+    # ── Model 1N: second observation 1000m to the right of well2B ──
+    "wells/well_1N_1.rmswell": {"name": "well_1N_1", "x": 4000.0, "y": 2000.0, "facies": 2},
     # ── Model 1M: 5 observations spread across grid, all facies=2 (like 1F) ──
     "wells/well_1M_0.rmswell": {"name": "well_1M_0", "x": 3000.0, "y": 2000.0, "facies": 2},
     "wells/well_1M_1.rmswell": {"name": "well_1M_1", "x": 1000.0, "y": 1000.0, "facies": 2},
