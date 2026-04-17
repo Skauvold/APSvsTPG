@@ -378,6 +378,27 @@ MODEL_CONFIGS = {
             "wells/well_5B_3.rmswell", "wells/well_5B_4.rmswell",
         ],
     },
+    "5C": {
+        "n_facies": 8,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3 F4 F5 F6 F7 F8",
+             "residual_ids": "1  1  1  1  1  1  1",
+             "trend_ids":    "1  2  3  4  5  6  7"},
+        ],
+        "trends": [
+            ("1", "1.1503"),
+            ("2", "0.6745"),
+            ("3", "0.3186"),
+            ("4",  "0.0000"),
+            ("5",  "-0.3186"),
+            ("6",  "-0.6745"),
+            ("7",  "-1.1503"),
+        ],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "wells": ["wells/well6.rmswell", "wells/well_5C_1.rmswell"],
+    },
     # ── Model 6: 4-facies, 3-level hierarchy, 3 independent GRFs ────────────
     # Level 1 (Background):  F4  | F1F2F3   (GRF 1, trend 1)
     # Level 2 (F1F2F3):      F3  | F1F2     (GRF 2, trend 2)
@@ -545,6 +566,8 @@ WELL_DATA = {
     "wells/well_5B_2.rmswell": {"name": "well_5B_2", "x": 5000.0, "y": 1000.0, "facies": 5},
     "wells/well_5B_3.rmswell": {"name": "well_5B_3", "x": 1000.0, "y": 3000.0, "facies": 5},
     "wells/well_5B_4.rmswell": {"name": "well_5B_4", "x": 5000.0, "y": 3000.0, "facies": 5},
+    # ── Model 5C: 5A with 5x longer ranges, 2 observations (well6 + 1000m right) ──
+    "wells/well_5C_1.rmswell": {"name": "well_5C_1", "x": 4000.0, "y": 2000.0, "facies": 5},
 }
 
 
