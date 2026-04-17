@@ -32,7 +32,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 1}],
     },
     "0B": {
         "n_facies": 2,
@@ -43,7 +43,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 50.0, "subrange": 50.0, "power": 1.5, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 1}],
     },
     "0C": {
         "n_facies": 2,
@@ -54,7 +54,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 5000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 1}],
     },
     "0D": {
         "n_facies": 2,
@@ -65,7 +65,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
         ],
-        "wells": ["wells/well1.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "0E": {
         "n_facies": 2,
@@ -76,24 +76,57 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.5, "azimuth": 0.0},
         ],
-        "wells": [
-            "wells/well4_00.rmswell", "wells/well4_01.rmswell", "wells/well4_02.rmswell",
-            "wells/well4_03.rmswell", "wells/well4_04.rmswell", "wells/well4_05.rmswell",
-            "wells/well4_06.rmswell", "wells/well4_07.rmswell", "wells/well4_08.rmswell",
-            "wells/well4_09.rmswell", "wells/well4_10.rmswell", "wells/well4_11.rmswell",
-            "wells/well4_12.rmswell", "wells/well4_13.rmswell", "wells/well4_14.rmswell",
-            "wells/well4_15.rmswell", "wells/well4_16.rmswell", "wells/well4_17.rmswell",
-            "wells/well4_18.rmswell", "wells/well4_19.rmswell", "wells/well4_20.rmswell",
-            "wells/well4_21.rmswell", "wells/well4_22.rmswell", "wells/well4_23.rmswell",
-            "wells/well4_24.rmswell", "wells/well4_25.rmswell", "wells/well4_26.rmswell",
-            "wells/well4_27.rmswell", "wells/well4_28.rmswell", "wells/well4_29.rmswell",
-            "wells/well4_30.rmswell", "wells/well4_31.rmswell", "wells/well4_32.rmswell",
-            "wells/well4_33.rmswell", "wells/well4_34.rmswell", "wells/well4_35.rmswell",
-            "wells/well4_36.rmswell", "wells/well4_37.rmswell", "wells/well4_38.rmswell",
-            "wells/well4_39.rmswell", "wells/well4_40.rmswell", "wells/well4_41.rmswell",
-            "wells/well4_42.rmswell", "wells/well4_43.rmswell", "wells/well4_44.rmswell",
-            "wells/well4_45.rmswell", "wells/well4_46.rmswell", "wells/well4_47.rmswell",
-            "wells/well4_48.rmswell", "wells/well4_49.rmswell",
+        "observations": [
+            {"x":   300.0, "y":  500.0, "facies": 1},
+            {"x":   900.0, "y":  500.0, "facies": 1},
+            {"x":  1500.0, "y":  500.0, "facies": 2},
+            {"x":  2100.0, "y":  500.0, "facies": 1},
+            {"x":  2700.0, "y":  500.0, "facies": 2},
+            {"x":  3300.0, "y":  500.0, "facies": 2},
+            {"x":  3900.0, "y":  500.0, "facies": 1},
+            {"x":  4500.0, "y":  500.0, "facies": 2},
+            {"x":  5100.0, "y":  500.0, "facies": 2},
+            {"x":  5700.0, "y":  500.0, "facies": 1},
+            {"x":   300.0, "y": 1300.0, "facies": 2},
+            {"x":   900.0, "y": 1300.0, "facies": 1},
+            {"x":  1500.0, "y": 1300.0, "facies": 1},
+            {"x":  2100.0, "y": 1300.0, "facies": 2},
+            {"x":  2700.0, "y": 1300.0, "facies": 1},
+            {"x":  3300.0, "y": 1300.0, "facies": 1},
+            {"x":  3900.0, "y": 1300.0, "facies": 2},
+            {"x":  4500.0, "y": 1300.0, "facies": 1},
+            {"x":  5100.0, "y": 1300.0, "facies": 2},
+            {"x":  5700.0, "y": 1300.0, "facies": 2},
+            {"x":   300.0, "y": 2000.0, "facies": 1},
+            {"x":   900.0, "y": 2000.0, "facies": 2},
+            {"x":  1500.0, "y": 2000.0, "facies": 2},
+            {"x":  2100.0, "y": 2000.0, "facies": 1},
+            {"x":  2700.0, "y": 2000.0, "facies": 2},
+            {"x":  3300.0, "y": 2000.0, "facies": 1},
+            {"x":  3900.0, "y": 2000.0, "facies": 1},
+            {"x":  4500.0, "y": 2000.0, "facies": 2},
+            {"x":  5100.0, "y": 2000.0, "facies": 1},
+            {"x":  5700.0, "y": 2000.0, "facies": 2},
+            {"x":   300.0, "y": 2700.0, "facies": 2},
+            {"x":   900.0, "y": 2700.0, "facies": 2},
+            {"x":  1500.0, "y": 2700.0, "facies": 1},
+            {"x":  2100.0, "y": 2700.0, "facies": 2},
+            {"x":  2700.0, "y": 2700.0, "facies": 1},
+            {"x":  3300.0, "y": 2700.0, "facies": 1},
+            {"x":  3900.0, "y": 2700.0, "facies": 2},
+            {"x":  4500.0, "y": 2700.0, "facies": 1},
+            {"x":  5100.0, "y": 2700.0, "facies": 1},
+            {"x":  5700.0, "y": 2700.0, "facies": 2},
+            {"x":   300.0, "y": 3500.0, "facies": 1},
+            {"x":   900.0, "y": 3500.0, "facies": 2},
+            {"x":  1500.0, "y": 3500.0, "facies": 1},
+            {"x":  2100.0, "y": 3500.0, "facies": 1},
+            {"x":  2700.0, "y": 3500.0, "facies": 2},
+            {"x":  3300.0, "y": 3500.0, "facies": 2},
+            {"x":  3900.0, "y": 3500.0, "facies": 1},
+            {"x":  4500.0, "y": 3500.0, "facies": 2},
+            {"x":  5100.0, "y": 3500.0, "facies": 2},
+            {"x":  5700.0, "y": 3500.0, "facies": 1},
         ],
     },
     "0F": {
@@ -105,7 +138,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.9, "azimuth": 0.0},
         ],
-        "wells": ["wells/well1.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "0G": {
         "n_facies": 2,
@@ -116,7 +149,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 500.0, "subrange": 500.0, "power": 1.0, "azimuth": 0.0},
         ],
-        "wells": ["wells/well1.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     # ── Model 1: 3-facies (F1 F2 F3), varying trends and wells ──────────
     "1A": {
@@ -128,7 +161,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 1}],
     },
     "1B": {
         "n_facies": 3,
@@ -139,7 +172,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1C": {
         "n_facies": 3,
@@ -150,7 +183,24 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell", "wells/well2C.rmswell", "wells/well2D.rmswell", "wells/well2E.rmswell", "wells/well2F.rmswell", "wells/well2G.rmswell", "wells/well2H.rmswell", "wells/well2I.rmswell", "wells/well2J.rmswell", "wells/well2K.rmswell", "wells/well2L.rmswell", "wells/well2M.rmswell", "wells/well2N.rmswell", "wells/well2O.rmswell", "wells/well2P.rmswell", "wells/well2Q.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  3040.0, "y": 2000.0, "facies": 2},
+            {"x":  3080.0, "y": 2000.0, "facies": 2},
+            {"x":  3120.0, "y": 2000.0, "facies": 2},
+            {"x":  3160.0, "y": 2000.0, "facies": 2},
+            {"x":  3200.0, "y": 2000.0, "facies": 2},
+            {"x":  3240.0, "y": 2000.0, "facies": 2},
+            {"x":  3280.0, "y": 2000.0, "facies": 3},
+            {"x":  3320.0, "y": 2000.0, "facies": 3},
+            {"x":  3360.0, "y": 2000.0, "facies": 3},
+            {"x":  3400.0, "y": 2000.0, "facies": 3},
+            {"x":  3440.0, "y": 2000.0, "facies": 3},
+            {"x":  3480.0, "y": 2000.0, "facies": 3},
+            {"x":  3520.0, "y": 2000.0, "facies": 3},
+            {"x":  3560.0, "y": 2000.0, "facies": 3},
+            {"x":  3600.0, "y": 2000.0, "facies": 3},
+        ],
     },
     "1D": {
         "n_facies": 3,
@@ -161,7 +211,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1E": {
         "n_facies": 3,
@@ -172,7 +222,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1F": {
         "n_facies": 3,
@@ -183,7 +233,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1G": {
         "n_facies": 3,
@@ -194,7 +244,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1H": {
         "n_facies": 3,
@@ -205,7 +255,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1I": {
         "n_facies": 3,
@@ -216,7 +266,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 4000.0, "subrange": 2500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1Ib": {
         "n_facies": 3,
@@ -227,7 +277,10 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 4000.0, "subrange": 2500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell", "wells/well_1Ib_1.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
     },
     "1J": {
         "n_facies": 3,
@@ -238,7 +291,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 200.0, "subrange": 125.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1K": {
         "n_facies": 3,
@@ -249,7 +302,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1L": {
         "n_facies": 3,
@@ -260,7 +313,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 16000.0, "subrange": 10000.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "1M": {
         "n_facies": 3,
@@ -271,10 +324,12 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": [
-            "wells/well_1M_0.rmswell",
-            "wells/well_1M_1.rmswell", "wells/well_1M_2.rmswell",
-            "wells/well_1M_3.rmswell", "wells/well_1M_4.rmswell",
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  1000.0, "y": 1000.0, "facies": 2},
+            {"x":  5000.0, "y": 1000.0, "facies": 2},
+            {"x":  1000.0, "y": 3000.0, "facies": 2},
+            {"x":  5000.0, "y": 3000.0, "facies": 2},
         ],
     },
     "1N": {
@@ -286,7 +341,10 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well2B.rmswell", "wells/well_1N_1.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
     },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
@@ -300,7 +358,7 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
             {"id": "2", "type": "genexp", "range": 400.0, "subrange": 400.0, "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 1}],
     },
     "2B": {
         "n_facies": 3,
@@ -313,7 +371,10 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
             {"id": "2", "type": "genexp", "range": 400.0, "subrange": 400.0, "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 1},
+            {"x":  3500.0, "y": 2000.0, "facies": 1},
+        ],
     },
     "2C": {
         "n_facies": 3,
@@ -326,7 +387,10 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 1600.0, "subrange": 1000.0, "power": 1.5, "azimuth": 30.0},
             {"id": "2", "type": "genexp", "range": 800.0, "subrange": 800.0, "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well2.rmswell", "wells/well3.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 1},
+            {"x":  3500.0, "y": 2000.0, "facies": 1},
+        ],
     },
     # ── Model 5: 8-facies, single Gaussian field, equal prior probability ──
     # Thresholds split standard normal into 8 equal intervals (each p=0.125).
@@ -351,7 +415,7 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well6.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 5}],
     },
     "5B": {
         "n_facies": 8,
@@ -372,10 +436,12 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": [
-            "wells/well_5B_0.rmswell",
-            "wells/well_5B_1.rmswell", "wells/well_5B_2.rmswell",
-            "wells/well_5B_3.rmswell", "wells/well_5B_4.rmswell",
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 5},
+            {"x":  1000.0, "y": 1000.0, "facies": 5},
+            {"x":  5000.0, "y": 1000.0, "facies": 5},
+            {"x":  1000.0, "y": 3000.0, "facies": 5},
+            {"x":  5000.0, "y": 3000.0, "facies": 5},
         ],
     },
     "5C": {
@@ -397,7 +463,10 @@ MODEL_CONFIGS = {
         "residuals": [
             {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
         ],
-        "wells": ["wells/well6.rmswell", "wells/well_5C_1.rmswell"],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 5},
+            {"x":  4000.0, "y": 2000.0, "facies": 5},
+        ],
     },
     # ── Model 6: 4-facies, 3-level hierarchy, 3 independent GRFs ────────────
     # Level 1 (Background):  F4  | F1F2F3   (GRF 1, trend 1)
@@ -417,7 +486,7 @@ MODEL_CONFIGS = {
             {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
             {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well7.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 4}],
     },
     "6B": {
         "n_facies": 4,
@@ -432,7 +501,7 @@ MODEL_CONFIGS = {
             {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
             {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well8.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "6C": {
         "n_facies": 4,
@@ -447,7 +516,7 @@ MODEL_CONFIGS = {
             {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
             {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well8.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
     "6D": {
         "n_facies": 4,
@@ -462,7 +531,7 @@ MODEL_CONFIGS = {
             {"id": "2", "type": "genexp", "range": 800.0,  "subrange": 800.0,  "power": 1.8, "azimuth": 0.0},
             {"id": "3", "type": "genexp", "range": 400.0,  "subrange": 400.0,  "power": 1.8, "azimuth": 0.0},
         ],
-        "wells": ["wells/well8.rmswell"],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 2}],
     },
 }
 
@@ -472,103 +541,6 @@ GRID_NZ = 2
 X_LENGTH = 6000.0
 Y_LENGTH = 4000.0
 Z_LENGTH = 20.0
-
-WELL_DATA = {
-    "wells/well1.rmswell": {"name": "well1", "x": 3000.0, "y": 2000.0, "facies": 2},
-    "wells/well2.rmswell": {"name": "well2", "x": 3000.0, "y": 2000.0, "facies": 1},
-    "wells/well2B.rmswell": {"name": "well2B", "x": 3000.0, "y": 2000.0, "facies": 2},
-    "wells/well2C.rmswell": {"name": "well2C", "x": 3040.0, "y": 2000.0, "facies": 2},
-    "wells/well2D.rmswell": {"name": "well2D", "x": 3080.0, "y": 2000.0, "facies": 2},
-    "wells/well2E.rmswell": {"name": "well2E", "x": 3120.0, "y": 2000.0, "facies": 2},
-    "wells/well2F.rmswell": {"name": "well2F", "x": 3160.0, "y": 2000.0, "facies": 2},
-    "wells/well2G.rmswell": {"name": "well2G", "x": 3200.0, "y": 2000.0, "facies": 2},
-    "wells/well2H.rmswell": {"name": "well2H", "x": 3240.0, "y": 2000.0, "facies": 2},
-    "wells/well2I.rmswell": {"name": "well2I", "x": 3280.0, "y": 2000.0, "facies": 3},
-    "wells/well2J.rmswell": {"name": "well2J", "x": 3320.0, "y": 2000.0, "facies": 3},
-    "wells/well2K.rmswell": {"name": "well2K", "x": 3360.0, "y": 2000.0, "facies": 3},
-    "wells/well2L.rmswell": {"name": "well2L", "x": 3400.0, "y": 2000.0, "facies": 3},
-    "wells/well2M.rmswell": {"name": "well2M", "x": 3440.0, "y": 2000.0, "facies": 3},
-    "wells/well2N.rmswell": {"name": "well2N", "x": 3480.0, "y": 2000.0, "facies": 3},
-    "wells/well2O.rmswell": {"name": "well2O", "x": 3520.0, "y": 2000.0, "facies": 3},
-    "wells/well2P.rmswell": {"name": "well2P", "x": 3560.0, "y": 2000.0, "facies": 3},
-    "wells/well2Q.rmswell": {"name": "well2Q", "x": 3600.0, "y": 2000.0, "facies": 3},
-    "wells/well3.rmswell": {"name": "well3", "x": 3500.0, "y": 2000.0, "facies": 1},
-    # ── Model 0E: 50 observations, 5 rows × 10 cols, random F1/F2 (25 each) ──
-    # x: 300, 900, 1500, 2100, 2700, 3300, 3900, 4500, 5100, 5700  (spacing ~600)
-    # y: 500, 1300, 2000, 2700, 3500                                (spacing ~700-800)
-    "wells/well4_00.rmswell": {"name": "well4_00", "x":  300.0, "y":  500.0, "facies": 1},
-    "wells/well4_01.rmswell": {"name": "well4_01", "x":  900.0, "y":  500.0, "facies": 1},
-    "wells/well4_02.rmswell": {"name": "well4_02", "x": 1500.0, "y":  500.0, "facies": 2},
-    "wells/well4_03.rmswell": {"name": "well4_03", "x": 2100.0, "y":  500.0, "facies": 1},
-    "wells/well4_04.rmswell": {"name": "well4_04", "x": 2700.0, "y":  500.0, "facies": 2},
-    "wells/well4_05.rmswell": {"name": "well4_05", "x": 3300.0, "y":  500.0, "facies": 2},
-    "wells/well4_06.rmswell": {"name": "well4_06", "x": 3900.0, "y":  500.0, "facies": 1},
-    "wells/well4_07.rmswell": {"name": "well4_07", "x": 4500.0, "y":  500.0, "facies": 2},
-    "wells/well4_08.rmswell": {"name": "well4_08", "x": 5100.0, "y":  500.0, "facies": 2},
-    "wells/well4_09.rmswell": {"name": "well4_09", "x": 5700.0, "y":  500.0, "facies": 1},
-    "wells/well4_10.rmswell": {"name": "well4_10", "x":  300.0, "y": 1300.0, "facies": 2},
-    "wells/well4_11.rmswell": {"name": "well4_11", "x":  900.0, "y": 1300.0, "facies": 1},
-    "wells/well4_12.rmswell": {"name": "well4_12", "x": 1500.0, "y": 1300.0, "facies": 1},
-    "wells/well4_13.rmswell": {"name": "well4_13", "x": 2100.0, "y": 1300.0, "facies": 2},
-    "wells/well4_14.rmswell": {"name": "well4_14", "x": 2700.0, "y": 1300.0, "facies": 1},
-    "wells/well4_15.rmswell": {"name": "well4_15", "x": 3300.0, "y": 1300.0, "facies": 1},
-    "wells/well4_16.rmswell": {"name": "well4_16", "x": 3900.0, "y": 1300.0, "facies": 2},
-    "wells/well4_17.rmswell": {"name": "well4_17", "x": 4500.0, "y": 1300.0, "facies": 1},
-    "wells/well4_18.rmswell": {"name": "well4_18", "x": 5100.0, "y": 1300.0, "facies": 2},
-    "wells/well4_19.rmswell": {"name": "well4_19", "x": 5700.0, "y": 1300.0, "facies": 2},
-    "wells/well4_20.rmswell": {"name": "well4_20", "x":  300.0, "y": 2000.0, "facies": 1},
-    "wells/well4_21.rmswell": {"name": "well4_21", "x":  900.0, "y": 2000.0, "facies": 2},
-    "wells/well4_22.rmswell": {"name": "well4_22", "x": 1500.0, "y": 2000.0, "facies": 2},
-    "wells/well4_23.rmswell": {"name": "well4_23", "x": 2100.0, "y": 2000.0, "facies": 1},
-    "wells/well4_24.rmswell": {"name": "well4_24", "x": 2700.0, "y": 2000.0, "facies": 2},
-    "wells/well4_25.rmswell": {"name": "well4_25", "x": 3300.0, "y": 2000.0, "facies": 1},
-    "wells/well4_26.rmswell": {"name": "well4_26", "x": 3900.0, "y": 2000.0, "facies": 1},
-    "wells/well4_27.rmswell": {"name": "well4_27", "x": 4500.0, "y": 2000.0, "facies": 2},
-    "wells/well4_28.rmswell": {"name": "well4_28", "x": 5100.0, "y": 2000.0, "facies": 1},
-    "wells/well4_29.rmswell": {"name": "well4_29", "x": 5700.0, "y": 2000.0, "facies": 2},
-    "wells/well4_30.rmswell": {"name": "well4_30", "x":  300.0, "y": 2700.0, "facies": 2},
-    "wells/well4_31.rmswell": {"name": "well4_31", "x":  900.0, "y": 2700.0, "facies": 2},
-    "wells/well4_32.rmswell": {"name": "well4_32", "x": 1500.0, "y": 2700.0, "facies": 1},
-    "wells/well4_33.rmswell": {"name": "well4_33", "x": 2100.0, "y": 2700.0, "facies": 2},
-    "wells/well4_34.rmswell": {"name": "well4_34", "x": 2700.0, "y": 2700.0, "facies": 1},
-    "wells/well4_35.rmswell": {"name": "well4_35", "x": 3300.0, "y": 2700.0, "facies": 1},
-    "wells/well4_36.rmswell": {"name": "well4_36", "x": 3900.0, "y": 2700.0, "facies": 2},
-    "wells/well4_37.rmswell": {"name": "well4_37", "x": 4500.0, "y": 2700.0, "facies": 1},
-    "wells/well4_38.rmswell": {"name": "well4_38", "x": 5100.0, "y": 2700.0, "facies": 1},
-    "wells/well4_39.rmswell": {"name": "well4_39", "x": 5700.0, "y": 2700.0, "facies": 2},
-    "wells/well4_40.rmswell": {"name": "well4_40", "x":  300.0, "y": 3500.0, "facies": 1},
-    "wells/well4_41.rmswell": {"name": "well4_41", "x":  900.0, "y": 3500.0, "facies": 2},
-    "wells/well4_42.rmswell": {"name": "well4_42", "x": 1500.0, "y": 3500.0, "facies": 1},
-    "wells/well4_43.rmswell": {"name": "well4_43", "x": 2100.0, "y": 3500.0, "facies": 1},
-    "wells/well4_44.rmswell": {"name": "well4_44", "x": 2700.0, "y": 3500.0, "facies": 2},
-    "wells/well4_45.rmswell": {"name": "well4_45", "x": 3300.0, "y": 3500.0, "facies": 2},
-    "wells/well4_46.rmswell": {"name": "well4_46", "x": 3900.0, "y": 3500.0, "facies": 1},
-    "wells/well4_47.rmswell": {"name": "well4_47", "x": 4500.0, "y": 3500.0, "facies": 2},
-    "wells/well4_48.rmswell": {"name": "well4_48", "x": 5100.0, "y": 3500.0, "facies": 2},
-    "wells/well4_49.rmswell": {"name": "well4_49", "x": 5700.0, "y": 3500.0, "facies": 1},
-    # ── Model 5A: 10-facies, single well, F8 observation ─────────────────
-    "wells/well6.rmswell": {"name": "well6", "x": 3000.0, "y": 2000.0, "facies": 5},
-    "wells/well7.rmswell": {"name": "well7", "x": 3000.0, "y": 2000.0, "facies": 4},
-    "wells/well8.rmswell": {"name": "well8", "x": 3000.0, "y": 2000.0, "facies": 2},
-    # ── Model 1Ib: second observation 1000m to the right of well2B ──
-    "wells/well_1Ib_1.rmswell": {"name": "well_1Ib_1", "x": 4000.0, "y": 2000.0, "facies": 2},
-    # ── Model 1N: second observation 1000m to the right of well2B ──
-    "wells/well_1N_1.rmswell": {"name": "well_1N_1", "x": 4000.0, "y": 2000.0, "facies": 2},
-    # ── Model 1M: 5 observations spread across grid, all facies=2 (like 1F) ──
-    "wells/well_1M_0.rmswell": {"name": "well_1M_0", "x": 3000.0, "y": 2000.0, "facies": 2},
-    "wells/well_1M_1.rmswell": {"name": "well_1M_1", "x": 1000.0, "y": 1000.0, "facies": 2},
-    "wells/well_1M_2.rmswell": {"name": "well_1M_2", "x": 5000.0, "y": 1000.0, "facies": 2},
-    "wells/well_1M_3.rmswell": {"name": "well_1M_3", "x": 1000.0, "y": 3000.0, "facies": 2},
-    "wells/well_1M_4.rmswell": {"name": "well_1M_4", "x": 5000.0, "y": 3000.0, "facies": 2},
-    # ── Model 5B: 5 observations spread across grid, all facies=5 (like 5A) ──
-    "wells/well_5B_0.rmswell": {"name": "well_5B_0", "x": 3000.0, "y": 2000.0, "facies": 5},
-    "wells/well_5B_1.rmswell": {"name": "well_5B_1", "x": 1000.0, "y": 1000.0, "facies": 5},
-    "wells/well_5B_2.rmswell": {"name": "well_5B_2", "x": 5000.0, "y": 1000.0, "facies": 5},
-    "wells/well_5B_3.rmswell": {"name": "well_5B_3", "x": 1000.0, "y": 3000.0, "facies": 5},
-    "wells/well_5B_4.rmswell": {"name": "well_5B_4", "x": 5000.0, "y": 3000.0, "facies": 5},
-    # ── Model 5C: 5A with 5x longer ranges, 2 observations (well6 + 1000m right) ──
-    "wells/well_5C_1.rmswell": {"name": "well_5C_1", "x": 4000.0, "y": 2000.0, "facies": 5},
-}
 
 
 def _build_well_file(well_name, x, y, facies_code, n_facies=3):
@@ -632,10 +604,10 @@ def _build_model_xml(model_number, seed, output_dir):
         ]
 
     well_parts = []
-    for well in cfg["wells"]:
+    for i in range(len(cfg["observations"])):
         well_parts += [
             "    <well>",
-            _xml_tag("      ", "file-name", well),
+            _xml_tag("      ", "file-name", f"wells/obs_{i}.rmswell"),
             "    </well>",
         ]
 
@@ -726,11 +698,10 @@ def run_TRANE_simulations(n_simulations, model_number, path_trane_models, path_t
     cfg = MODEL_CONFIGS[model_number]
     wells_dir = os.path.join(path_trane_models, "input", "wells")
     os.makedirs(wells_dir, exist_ok=True)
-    for well_path in cfg["wells"]:
-        wd = WELL_DATA[well_path]
-        well_file_path = os.path.join(path_trane_models, "input", well_path)
+    for i, obs in enumerate(cfg["observations"]):
+        well_file_path = os.path.join(wells_dir, f"obs_{i}.rmswell")
         with open(well_file_path, 'w') as f:
-            f.write(_build_well_file(wd["name"], wd["x"], wd["y"], wd["facies"], n_facies=cfg["n_facies"]))
+            f.write(_build_well_file(f"obs_{i}", obs["x"], obs["y"], obs["facies"], n_facies=cfg["n_facies"]))
 
     out_z = [None] * n_simulations
     completed = [0]
@@ -972,16 +943,16 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
     # Compute shortest connection paths (saved iterations for plot; all iterations for length stats)
     _connection_paths = None
     path_lengths = []
-    _wells_cfg = MODEL_CONFIGS[model_number]["wells"]
-    if len(_wells_cfg) >= 2:
-        _wd0 = WELL_DATA[_wells_cfg[0]]
-        _wd1 = WELL_DATA[_wells_cfg[1]]
+    _obs_cfg = MODEL_CONFIGS[model_number]["observations"]
+    if len(_obs_cfg) >= 2:
+        _obs0 = _obs_cfg[0]
+        _obs1 = _obs_cfg[1]
         _nx = z[0].shape[0]
         _ny = z[0].shape[1]
-        _x1_ind = math.floor(_wd0["x"] / dx)
-        _y1_ind = math.floor(_wd0["y"] / dy)
-        _x2_ind = math.floor(_wd1["x"] / dx)
-        _y2_ind = math.floor(_wd1["y"] / dy)
+        _x1_ind = math.floor(_obs0["x"] / dx)
+        _y1_ind = math.floor(_obs0["y"] / dy)
+        _x2_ind = math.floor(_obs1["x"] / dx)
+        _y2_ind = math.floor(_obs1["y"] / dy)
         _t = time.time()
         _connection_paths = [None] * n_sim
         for _it, z_i in enumerate(z):
@@ -1008,13 +979,13 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         save_threshold_grids_as_png(parameters, model_number, output_dir=output_dir, data_dir=data_dir, prefix=prefix)
         print(f"{CYAN}  [timing] {prefix + ' save_threshold_grids_as_png:':<42} {time.time()-_t:6.2f}s{RESET}")
 
-    wells_cfg = MODEL_CONFIGS[model_number]["wells"]
-    if len(wells_cfg) >= 2:
-        wd0 = WELL_DATA[wells_cfg[0]]
-        wd1 = WELL_DATA[wells_cfg[1]]
+    obs_cfg = MODEL_CONFIGS[model_number]["observations"]
+    if len(obs_cfg) >= 2:
+        obs0 = obs_cfg[0]
+        obs1 = obs_cfg[1]
         _t = time.time()
         count_connected = count_connected_grid_nodes(
-            z, parameters, wd0["x"], wd0["y"], [wd1["x"], wd1["y"]]
+            z, parameters, obs0["x"], obs0["y"], [obs1["x"], obs1["y"]]
         )
         print(f"{CYAN}  [timing] {prefix + ' count_connected_grid_nodes:':<42} {time.time()-_t:6.2f}s{RESET}")
         count_connected_filtered = [c for c in count_connected if c != -1]
@@ -1025,7 +996,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         conn_min  = min(count_connected_filtered) if count_connected_filtered else None
         conn_max  = max(count_connected_filtered) if count_connected_filtered else None
         conn_lines = [
-            f"Connections for {prefix} [{wd0['name']} -> {wd1['name']}] (n={n_total}):",
+            f"Connections for {prefix} [obs_0 -> obs_1] (n={n_total}):",
             f"  Connected: {n_conn:5d} / {n_total}  ({pct_conn:5.1f}%)",
         ]
         if conn_mean is not None:
@@ -1051,7 +1022,7 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
             pl_min   = min(path_lengths)
             pl_max   = max(path_lengths)
             pl_lines = [
-                f"Path lengths for {prefix} [{wd0['name']} -> {wd1['name']}] (n_connected={len(path_lengths)}):",
+                f"Path lengths for {prefix} [obs_0 -> obs_1] (n_connected={len(path_lengths)}):",
                 f"  Mean:   {pl_mean:.2f}",
             ]
             if pl_stdev is not None:
@@ -1068,14 +1039,14 @@ def _analyse(z, parameters, prefix, dx, dy, verbose, model_number, max_facies_gr
         count_connected_filtered = []
 
     well_plot_data = []
-    for wp in MODEL_CONFIGS[model_number]["wells"]:
-        wd = WELL_DATA[wp]
+    for i, obs in enumerate(MODEL_CONFIGS[model_number]["observations"]):
+        obs_name = f"obs_{i}"
         _t = time.time()
-        per_well_counts = count_connected_nodes_from_point(z, parameters, wd["x"], wd["y"])
-        print(f"{CYAN}  [timing] {(prefix + ' count_connected_nodes [' + wd['name'] + ']:'):<42} {time.time()-_t:6.2f}s{RESET}")
-        well_plot_data.append((prefix + "_" + wd["name"], per_well_counts))
-        stat_lines = _cluster_size_stats_lines(per_well_counts, wd["name"], prefix)
-        summary_lines = _cluster_summary_stats_lines(per_well_counts, wd["name"], prefix)
+        per_well_counts = count_connected_nodes_from_point(z, parameters, obs["x"], obs["y"])
+        print(f"{CYAN}  [timing] {(prefix + ' count_connected_nodes [' + obs_name + ']:'):<42} {time.time()-_t:6.2f}s{RESET}")
+        well_plot_data.append((prefix + "_" + obs_name, per_well_counts))
+        stat_lines = _cluster_size_stats_lines(per_well_counts, obs_name, prefix)
+        summary_lines = _cluster_summary_stats_lines(per_well_counts, obs_name, prefix)
         all_lines = stat_lines + summary_lines
         if verbose:
             print()
@@ -1111,8 +1082,8 @@ def save_facies_grids_as_png(facies_grids, parameters, prefix, model_number, ind
     dy = parameters[1]
     x_length = parameters[2]
     y_length = parameters[3]
-    well_x = [WELL_DATA[wp]["x"] for wp in MODEL_CONFIGS[model_number]["wells"]]
-    well_y = [WELL_DATA[wp]["y"] for wp in MODEL_CONFIGS[model_number]["wells"]]
+    well_x = [obs["x"] for obs in MODEL_CONFIGS[model_number]["observations"]]
+    well_y = [obs["y"] for obs in MODEL_CONFIGS[model_number]["observations"]]
     x_min = 0.0
     x_max = x_length
     y_min = 0.0

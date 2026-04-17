@@ -9,7 +9,7 @@ from datetime import datetime
 from methods import (run_TRANE_simulations, run_APS_simulations,
                      plot_histogram_of_connected_cells, compare_prob_maps,
                      _analyse, _print_header, _save, _load,
-                     MODEL_CONFIGS, WELL_DATA)
+                     MODEL_CONFIGS)
 
 # ============================================================
 # Options
@@ -88,13 +88,9 @@ for MODEL in MODELS:
         _f.write(f"    residuals:\n")
         for _r in _cfg["residuals"]:
             _f.write(f"        id={_r['id']}  type={_r['type']}  range={_r['range']}  subrange={_r['subrange']}  power={_r['power']}  azimuth={_r['azimuth']}\n")
-        _f.write(f"    wells:\n")
-        for _wp in _cfg["wells"]:
-            if _wp in WELL_DATA:
-                _wd = WELL_DATA[_wp]
-                _f.write(f"        {_wd['name']}  x={_wd['x']}  y={_wd['y']}  facies={_wd['facies']}\n")
-            else:
-                _f.write(f"        {_wp}\n")
+        _f.write(f"    observations:\n")
+        for _i, _obs in enumerate(_cfg["observations"]):
+            _f.write(f"        obs_{_i}  x={_obs['x']}  y={_obs['y']}  facies={_obs['facies']}\n")
 
     trane_well_data = []
     aps_well_data = []
