@@ -15,7 +15,7 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # Options
 # ============================================================
 MODELS = ["5C"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 500
+n_sim = 1000
 use_existing_results = False
 
 RUN_TRANE = True
@@ -164,7 +164,7 @@ for MODEL in MODELS:
     # Probability map sanity check
     # ============================================================
     if RUN_TRANE and RUN_APS:
-        compare_prob_maps(MODEL, path_pickle_trane, path_pickle_aps, log_file=_log_file)
+        compare_prob_maps(MODEL, path_pickle_trane, path_pickle_aps, output_dir=path_trane_results_to_save, log_file=_log_file)
 
     # ============================================================
     # Histograms
