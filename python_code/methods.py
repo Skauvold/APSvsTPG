@@ -346,6 +346,62 @@ MODEL_CONFIGS = {
             {"x":  4000.0, "y": 2000.0, "facies": 2},
         ],
     },
+    "1O": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.15"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1P": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.5"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1Q": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "2.5"), ("2", "2.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 1},
+            {"x":  4000.0, "y": 2000.0, "facies": 1},
+        ],
+    },
+    "1R": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "2.5"), ("2", "2.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 3},
+            {"x":  4000.0, "y": 2000.0, "facies": 3},
+        ],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -416,6 +472,28 @@ MODEL_CONFIGS = {
             {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
         ],
         "observations": [{"x": 3000.0, "y": 2000.0, "facies": 5}],
+    },
+    "5A2": {
+        "n_facies": 8,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3 F4 F5 F6 F7 F8",
+             "residual_ids": "1  1  1  1  1  1  1",
+             "trend_ids":    "1  2  3  4  5  6  7"},
+        ],
+        # 7 trends that place equal-probability thresholds at norm.ppf(k/8) for k=1..7
+        "trends": [
+            ("1", "1.1503"),
+            ("2", "0.6745"),
+            ("3", "0.3186"),
+            ("4",  "0.0000"),
+            ("5",  "-0.3186"),
+            ("6",  "-0.6745"),
+            ("7",  "-1.1503"),
+        ],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 800.0, "subrange": 500.0, "power": 1.5, "azimuth": 30.0},
+        ],
+        "observations": [{"x": 3000.0, "y": 2000.0, "facies": 5}, {"x": 3500.0, "y": 2000.0, "facies": 5}],
     },
     "5B": {
         "n_facies": 8,
