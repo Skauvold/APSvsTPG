@@ -14,8 +14,8 @@ from methods import (run_TRANE_simulations, run_APS_simulations,
 # ============================================================
 # Options
 # ============================================================
-MODELS = ["1N"]  # list of models to run sequentially; each gets its own results folder
-n_sim = 20
+MODELS = ["1T3", "1T3"]  # list of models to run sequentially; each gets its own results folder
+n_sims = [200, 5000]
 use_existing_results = False
 
 RUN_TRANE = True
@@ -38,7 +38,8 @@ BRIGHT_RED = "\033[91m"
 RESET = "\033[0m"
 
 
-for MODEL in MODELS:
+for _run_idx, MODEL in enumerate(MODELS):
+    n_sim = n_sims[_run_idx] if isinstance(n_sims, (list, tuple)) else n_sims
     # Make results folder with timestamp-based name
     _timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
     path_trane_results_to_save = _path_results_base + "_" + _timestamp + "_M" + MODEL
@@ -189,10 +190,10 @@ for MODEL in MODELS:
         _ymax_well = _ymax_well * 1.1
         for _name, _counts in trane_well_data:
             plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
-                output_dir=path_output_trane)
+                output_dir=path_output_trane, log_file=_log_file)
         for _name, _counts in aps_well_data:
             plot_histogram_of_connected_cells(_counts, _name, 0.0, _xmax_well, 0.0, _ymax_well, _n_bins,
-                output_dir=path_output_aps)
+                output_dir=path_output_aps, log_file=_log_file)
     print(f"\033[36m  [timing] {'histogram plotting:':<42} {time.time()-_t0:6.2f}s\033[0m")
 
     # Two-point connection histograms (not applicable for model 0)
@@ -214,16 +215,16 @@ for MODEL in MODELS:
                             _ymax_tp = _bp
             _ymax_tp = _ymax_tp * 1.1
             plot_histogram_of_connected_cells(count_connected_filtered_TRANE, 'TRANE', 0.0, max3, 0.0, _ymax_tp, _n_bins_tp,
-                output_dir=path_output_trane)
+                output_dir=path_output_trane, log_file=_log_file)
             plot_histogram_of_connected_cells(count_connected_filtered_APS, 'APS', 0.0, max3, 0.0, _ymax_tp, _n_bins_tp,
-                output_dir=path_output_aps)
+                output_dir=path_output_aps, log_file=_log_file)
 
     # Path length histograms
     if plot_histograms and RUN_TRANE and RUN_APS:
         all_path_lengths = path_lengths_TRANE + path_lengths_APS
         if all_path_lengths:
             _xmax_pl = max(all_path_lengths) * 1.02
-            _n_bins_pl = min(_n_bins, 100)
+            _n_bins_pl = min(_n_bins * 5, 500)
             _binwidth_pl = _xmax_pl / _n_bins_pl
             _bin_edges_pl = [i * _binwidth_pl for i in range(_n_bins_pl + 1)]
             _ymax_pl = 0.0
@@ -237,9 +238,9 @@ for MODEL in MODELS:
                             _ymax_pl = _bp
             _ymax_pl = _ymax_pl * 1.1
             plot_histogram_of_connected_cells(path_lengths_TRANE, 'TRANE', 0.0, _xmax_pl, 0.0, _ymax_pl, _n_bins_pl,
-                output_dir=path_output_trane, xlabel='Shortest path length (m)', filename_tag='pathlength')
+                output_dir=path_output_trane, xlabel='Shortest path length (m)', filename_tag='pathlength', log_file=_log_file)
             plot_histogram_of_connected_cells(path_lengths_APS, 'APS', 0.0, _xmax_pl, 0.0, _ymax_pl, _n_bins_pl,
-                output_dir=path_output_aps, xlabel='Shortest path length (m)', filename_tag='pathlength')
+                output_dir=path_output_aps, xlabel='Shortest path length (m)', filename_tag='pathlength', log_file=_log_file)
 
 
 

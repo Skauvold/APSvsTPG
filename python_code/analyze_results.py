@@ -201,6 +201,7 @@ def _parse_log(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", action="store_true", help="Print model config details below the table")
+    parser.add_argument("--reduce", action="store_true", help="Print only 'keep' runs")
     args = parser.parse_args()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -273,7 +274,7 @@ def main():
     GREEN   = "\033[94m"
     RESET   = "\033[0m"
 
-    # 3 newest runs by timestamp prefix (YYMMDD_HHMMSS = first 13 chars of run_name)
+    # 1 newest runs by timestamp prefix (YYMMDD_HHMMSS = first 13 chars of run_name)
     newest_names = set(
         n for n, _ in sorted(rows, key=lambda x: x[0][:13], reverse=True)[:1]
     )
@@ -301,8 +302,8 @@ def main():
     def _sort_key(item):
         run_name, data = item
         model = data["model"]
-        mm = re.match(r"^(\d+)([A-Za-z]+)$", model)
-        model_key = (int(mm.group(1)), mm.group(2)) if mm else (999, model)
+        mm = re.match(r"^(\d+)([A-Za-z]+)(\d*)$", model)
+        model_key = (int(mm.group(1)), mm.group(2), int(mm.group(3)) if mm.group(3) else 0) if mm else (999, model, 0)
         return (model_key, run_name)
 
     keep_rows  = sorted([(n, d) for n, d in rows if "keep"  in n.lower()], key=_sort_key)
@@ -322,8 +323,9 @@ def main():
         print_row(run_name, data)
     if keep_rows and other_rows:
         pass
-    for run_name, data in other_rows:
-        print_row(run_name, data)
+    if not args.reduce:
+        for run_name, data in other_rows:
+            print_row(run_name, data)
     print()
 
     # Per-run model config detail blocks

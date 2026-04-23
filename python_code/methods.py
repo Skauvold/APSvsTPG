@@ -402,6 +402,122 @@ MODEL_CONFIGS = {
             {"x":  4000.0, "y": 2000.0, "facies": 3},
         ],
     },
+    # = 1N, but with higher power in variogram
+    "1S": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.7, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1S2": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.2"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.7, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1S3": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.1"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.7, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    # = 1N, but with higher power in variogram
+    "1T": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.3"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.9, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1T2": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.2"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.9, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    "1T3": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.1"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.9, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    # = 1N, but with lower power in variogram and higher probability of F2
+    "1U": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.7"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 8000.0, "subrange": 5000.0, "power": 1.1, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
+    # = 1U, but with bigger range
+    "1V": {
+        "n_facies": 3,
+        "facies_models": [
+            {"parent": "background", "names": "F1 F2 F3", "residual_ids": "1  1", "trend_ids": "1  2"},
+        ],
+        "trends": [("1", "0.7"), ("2", "0.0")],
+        "residuals": [
+            {"id": "1", "type": "genexp", "range": 12000.0, "subrange": 7500.0, "power": 1.1, "azimuth": 30.0},
+        ],
+        "observations": [
+            {"x":  3000.0, "y": 2000.0, "facies": 2},
+            {"x":  4000.0, "y": 2000.0, "facies": 2},
+        ],
+    },
     # ── Model 2: 3-facies hierarchical, 1 well ───────────────────────────
     "2A": {
         "n_facies": 3,
@@ -1408,9 +1524,14 @@ def compare_prob_maps(model_number, trane_data_dir, aps_data_dir, output_dir=Non
         plt.close()
 
 
-def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir=".", xlabel='Connected grid nodes', filename_tag='connectedvolume'):
+def plot_histogram_of_connected_cells(sum_connected, prefix, xmin, xmax, ymin, ymax, n_bins, output_dir=".", xlabel='Connected grid nodes', filename_tag='connectedvolume', log_file=None):
     fig, ax1 = plt.subplots(figsize=(15, 10))
-    binwidth = xmax / n_bins
+    binwidth = max(1, int(round((xmax - xmin) / n_bins)))
+    _bin_msg = f"  [histogram] {prefix} {filename_tag}: bin_size={binwidth} (n_bins={n_bins}, xrange=[{xmin},{xmax}])"
+    print(_bin_msg)
+    if log_file:
+        with open(log_file, "a") as _lf:
+            _lf.write(_bin_msg + "\n")
     weights = np.ones(len(sum_connected)) / len(sum_connected) if sum_connected else np.array([])
     ax1.hist(sum_connected, bins=np.arange(xmin, xmax + binwidth, binwidth), color='steelblue', weights=weights)
     ax1.set_ylabel('Proportion')
